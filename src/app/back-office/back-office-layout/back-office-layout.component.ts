@@ -1,0 +1,11 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-back-office-layout',
+  imports: [],
+  templateUrl: './back-office-layout.component.html',
+  styleUrl: './back-office-layout.component.css'
+})
+export class BackOfficeLayoutComponent {
+
+}

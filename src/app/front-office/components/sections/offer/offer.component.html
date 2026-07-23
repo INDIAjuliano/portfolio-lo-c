@@ -1,0 +1,16 @@
+<section class="section" style="text-align: center;">
+  <h2 class="font-headline-lg" style="letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; color: var(--text-primary);">
+    Offer
+  </h2>
+  <p class="font-body-lg" style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+    Promote your company or personal brand with our services.
+  </p>
+  <div class="offer-grid">
+    @for (offer of offers; track $index) {
+      <div class="offer-card">
+        <app-icon [name]="offer.icon" size="36"></app-icon>
+        <h4>{{ offer.label }}</h4>
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,22 @@
+<section class="section section-tertiary" id="about">
+  <div class="about-grid container">
+    <div class="about-images">
+      @for (img of aboutImages; track $index) {
+        <div class="img" [style.backgroundImage]="'url(' + img + ')'"></div>
+      }
+    </div>
+    <div class="about-content">
+      <h2>Artistic Approach</h2>
+      <p>
+        In every shot I capture, I weave the threads of a unique story, where emotions come to life and
+        precious moments are frozen for eternity. Each image is a window onto my journey, revealing
+        moments of happiness, challenges overcome and dreams in the making. My lens becomes my pen, and
+        my photos become the words that compose the visual chapters of my existence.
+      </p>
+      <button class="btn-primary">
+        View More
+        <app-icon name="arrow_right_alt" size="20"></app-icon>
+      </button>
+    </div>
+  </div>
+</section>

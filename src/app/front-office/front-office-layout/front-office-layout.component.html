@@ -1,0 +1,19 @@
+<!-- LOADER -->
+@if (showLoader) {
+  <app-loader (dismissed)="onLoaderDismissed()"></app-loader>
+}
+
+<!-- MOBILE MENU OVERLAY -->
+<div class="menu-overlay" [class.active]="menuService.isOpen" (click)="menuService.close()"></div>
+<app-mobile-menu></app-mobile-menu>
+
+<!-- HEADER -->
+<app-header></app-header>
+
+<!-- MAIN CONTENT -->
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<!-- FOOTER -->
+<app-footer></app-footer>
