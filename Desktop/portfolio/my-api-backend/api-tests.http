@@ -1,0 +1,188 @@
+@baseUrl = http://[::1]:8000
+@token = {{login.response.body.token}}
+
+### ============================================
+###  AUTH
+### ============================================
+
+### 1. Register (returns 201 or 409 if user exists)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123",
+  "firstName": "Admin",
+  "lastName": "User"
+}
+
+### 2. Login (returns JWT token)
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+
+### 3. Me
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### ============================================
+###  MEDIA
+### ============================================
+
+### 4. List media
+GET {{baseUrl}}/api/media?type=image
+Authorization: Bearer {{token}}
+
+### 5. Create media
+POST {{baseUrl}}/api/media
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Mon image",
+  "slug": "mon-image",
+  "type": "image",
+  "imageUrl": "https://example.com/image.jpg",
+  "isPublished": true
+}
+
+### 6. Show media
+# Remplacer 1 par l'id du media cree
+GET {{baseUrl}}/api/media/1
+Authorization: Bearer {{token}}
+
+### 7. Update media
+PUT {{baseUrl}}/api/media/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Mon image mise a jour",
+  "isFeatured": true
+}
+
+### 8. Delete media
+DELETE {{baseUrl}}/api/media/1
+Authorization: Bearer {{token}}
+
+### ============================================
+###  CATEGORIES
+### ============================================
+
+### 9. List categories
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+
+### 10. Create category
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Nature",
+  "slug": "nature",
+  "description": "Photos nature",
+  "icon": "leaf"
+}
+
+### 11. Show category
+# Remplacer 1 par l'id cree
+GET {{baseUrl}}/api/categories/1
+Authorization: Bearer {{token}}
+
+### 12. Update category
+PUT {{baseUrl}}/api/categories/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Nature & Voyage"
+}
+
+### 13. Delete category
+DELETE {{baseUrl}}/api/categories/1
+Authorization: Bearer {{token}}
+
+### ============================================
+###  ALBUMS
+### ============================================
+
+### 14. List albums
+GET {{baseUrl}}/api/albums
+Authorization: Bearer {{token}}
+
+### 15. Create album
+# mediaId et categoryId doivent exister
+POST {{baseUrl}}/api/albums
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Album ete",
+  "description": "Album photos ete",
+  "mediaId": 1,
+  "categoryId": 1
+}
+
+### 16. Show album
+# Remplacer 1 par l'id cree
+GET {{baseUrl}}/api/albums/1
+Authorization: Bearer {{token}}
+
+### 17. Update album
+PUT {{baseUrl}}/api/albums/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Album ete 2026"
+}
+
+### 18. Delete album
+DELETE {{baseUrl}}/api/albums/1
+Authorization: Bearer {{token}}
+
+### ============================================
+###  CONTACTS
+### ============================================
+
+### 19. List contacts
+GET {{baseUrl}}/api/contacts
+Authorization: Bearer {{token}}
+
+### 20. Create contact
+POST {{baseUrl}}/api/contacts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Jean Dupont",
+  "email": "jean@example.com",
+  "phone": "0600000000",
+  "message": "Bonjour",
+  "isRead": false,
+  "userId": 1
+}
+
+### 21. Show contact
+# Remplacer 1 par l'id cree
+GET {{baseUrl}}/api/contacts/1
+Authorization: Bearer {{token}}
+
+### 22. Update contact
+PUT {{baseUrl}}/api/contacts/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "isRead": true
+}
+
+### 23. Delete contact
+DELETE {{baseUrl}}/api/contacts/1
+Authorization: Bearer {{token}}
