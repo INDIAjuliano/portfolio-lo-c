@@ -110,13 +110,27 @@ Représente une catégorie de contenu. Champs principaux :
 Représente un fichier média (image, vidéo, document). Champs principaux :
 - `id` : identifiant unique
 - `title` : titre du média
+- `slug` : slug URL-friendly (unique)
 - `description` : description du contenu média
-- `type` : tableau des types (ex: image, video)
-- `url` : URL du fichier
-- `thumbnail` : URL de la miniature
+- `type` : type de média (ex: image, video)
+- `imageUrl` : URL de l'image
+- `videoUrl` : URL de la vidéo
+- `embedUrl` : URL d'intégration (embed)
+- `platform` : plateforme source (ex: youtube, vimeo)
+- `videoId` : identifiant vidéo sur la plateforme
+- `thumbnailUrl` : URL de la miniature
+- `width` / `height` : dimensions en pixels
+- `orientation` : orientation (portrait, paysage, carré)
 - `mimeType` : type MIME du fichier
+- `fileSize` : taille du fichier en octets
 - `altText` : texte alternatif pour l'accessibilité
-- `albums` : relation OneToMany vers Album
+- `duration` / `durationFormatted` : durée (pour les vidéos)
+- `gallery` : données JSON pour la galerie
+- `tags` : tableau JSON de tags
+- `isPublished` : statut publication
+- `isFeatured` : mise en avant
+- `views` / `likes` : compteurs
+- `albums` : relation OneToMany vers Album (cascade persist + remove)
 
 ### Album
 Représente un album liant un média à une catégorie. Champs principaux :
@@ -145,7 +159,7 @@ Représente un message de contact lié à un utilisateur. Champs principaux :
 - `phone` : téléphone
 - `message` : contenu du message
 - `isRead` : statut lu/non lu
-- `userId` : relation ManyToOne obligatoire vers User
+- `user` : relation ManyToOne obligatoire vers User
 - `createdAt` : date de création
 
 ## Sécurité API
