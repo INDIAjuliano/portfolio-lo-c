@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+gsap.registerPlugin(ScrollTrigger);
+
 @Component({
   selector: 'app-hero',
   standalone: true,
@@ -18,6 +20,12 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('scrubBar') scrubBarRef!: ElementRef<HTMLDivElement>;
   @ViewChild('scrollInd') scrollIndRef!: ElementRef<HTMLDivElement>;
   @ViewChild('grad') gradRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('bubblesWrapper') bubblesWrapperRef!: ElementRef<HTMLDivElement>;
+
+  private bubblesColors = ['#3b3524',
+    '#112b39'];
+  private currentSlide = 0;
+  private slidesLength = 0;
 
   private ctx!: CanvasRenderingContext2D;
   private frames: HTMLImageElement[] = [];
@@ -28,22 +36,97 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
   private rafRunning = false;
   private rafId: number | null = null;
 
+  private heroScrollTrigger: any = null;
+  private heroVisibilityTrigger: any = null;
+  private activated = false;
+  private loaderDismissed = false;
+  private canvasReady = false;
+  private safetyTimer: any = null;
+  private loaderDismissTimer: any = null;
+  private pass1Done = 0;
+  private pass1Count = 0;
+
   ngOnInit(): void {
-    gsap.registerPlugin(ScrollTrigger);
+    if (typeof window === 'undefined') return;
   }
+
+  private loaderDismissedHandler = () => {
+    this.loaderDismissed = true;
+    if (this.safetyTimer) {
+      clearTimeout(this.safetyTimer);
+      this.safetyTimer = null;
+    }
+    this.loaderDismissTimer = setTimeout(() => {
+      this.dismissLoader();
+    }, 400);
+  };
 
   ngAfterViewInit(): void {
     if (typeof document === 'undefined') return;
     this.initCanvas();
     this.loadFrames();
-    window.addEventListener('loaderDismissed', () => {
-      setTimeout(() => this.startHeroEntrance(), 400);
-    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('loaderDismissed', this.loaderDismissedHandler);
+    }
+    if (!document.querySelector('app-loader')) {
+      this.loaderDismissedHandler();
+    }
+    this.activate();
+    this.safetyTimer = setTimeout(() => {
+      if (!this.canvasReady) {
+        this.loaderDismissed = true;
+        this.dismissLoader();
+      }
+    }, 15000);
   }
 
   ngOnDestroy(): void {
+    this.deactivate();
     if (this.rafId) cancelAnimationFrame(this.rafId);
-    ScrollTrigger.getAll().forEach(st => st.kill());
+    this.rafRunning = false;
+    if (this.heroScrollTrigger) {
+      this.heroScrollTrigger.kill();
+      this.heroScrollTrigger = null;
+    }
+    if (this.heroVisibilityTrigger) {
+      this.heroVisibilityTrigger.kill();
+      this.heroVisibilityTrigger = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('loaderDismissed', this.loaderDismissedHandler);
+    }
+    if (this.safetyTimer) {
+      clearTimeout(this.safetyTimer);
+      this.safetyTimer = null;
+    }
+    if (this.loaderDismissTimer) {
+      clearTimeout(this.loaderDismissTimer);
+      this.loaderDismissTimer = null;
+    }
+  }
+
+  activate(): void {
+    if (this.activated) return;
+    this.activated = true;
+    if (this.loaderDismissed) {
+      this.startHeroEntrance();
+      this.initBubbles();
+    }
+  }
+
+  deactivate(): void {
+    if (!this.activated) return;
+    this.activated = false;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    this.rafRunning = false;
+    if (this.heroScrollTrigger) {
+      this.heroScrollTrigger.kill();
+      this.heroScrollTrigger = null;
+    }
+    if (this.heroVisibilityTrigger) {
+      this.heroVisibilityTrigger.kill();
+      this.heroVisibilityTrigger = null;
+    }
   }
 
   private initCanvas(): void {
@@ -52,66 +135,71 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeCanvas();
   }
 
-  @HostListener('window:resize')
-   resizeCanvas(): void {
+  private resizeCanvas(): void {
     const canvas = this.canvasRef.nativeElement;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    if (this.frames[this.currentFrameIdx]) {
+    if (this.canvasReady && this.frames[this.currentFrameIdx]) {
       this.drawFrame(this.currentFrameIdx);
     }
+  }
+
+  @HostListener('window:resize')
+   resizeCanvasHost(): void {
+    this.resizeCanvas();
   }
 
   private drawFrame(idx: number): void {
     const img = this.frames[idx];
     if (!img || !img.complete) return;
-
     const canvas = this.canvasRef.nativeElement;
-    const cw = canvas.width, ch = canvas.height;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const cw = canvas.width,
+        ch = canvas.height;
+    const iw = img.naturalWidth,
+        ih = img.naturalHeight;
     if (!iw || !ih) return;
-
     const scale = Math.max(cw / iw, ch / ih);
-    const dw = iw * scale, dh = ih * scale;
-    const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
-
+    const dw = iw * scale,
+        dh = ih * scale;
+    const dx = (cw - dw) / 2,
+        dy = (ch - dh) / 2;
     this.ctx.clearRect(0, 0, cw, ch);
     this.ctx.drawImage(img, dx, dy, dw, dh);
   }
 
+  private framePath(n: number): string {
+    const padded = String(n).padStart(4, '0');
+    return `assets/images/hero-frames/frame_${padded}.jpg`;
+  }
+
   private loadFrames(): void {
     const PASS1_STEP = 6;
-    let loaded = 0;
-    const total = Math.ceil(this.FRAME_COUNT / PASS1_STEP);
+    this.pass1Done = 0;
+    this.pass1Count = Math.ceil(this.FRAME_COUNT / PASS1_STEP);
 
     for (let i = 1; i <= this.FRAME_COUNT; i += PASS1_STEP) {
       const idx = i - 1;
       const img = new Image();
       img.onload = () => {
         this.frames[idx] = img;
-        loaded++;
+        this.pass1Done++;
         if (idx === 0) this.drawFrame(0);
-        if (loaded >= total) {
-          this.initScrollTrigger();
-          this.startRenderLoop();
-          this.loadRemainingFrames();
+        if (this.pass1Done >= this.pass1Count) {
+          setTimeout(() => {
+            this.dismissLoader();
+          }, 400);
         }
       };
       img.onerror = () => {
-        loaded++;
-        if (loaded >= total) {
-          this.initScrollTrigger();
-          this.startRenderLoop();
-          this.loadRemainingFrames();
+        this.pass1Done++;
+        if (this.pass1Done >= this.pass1Count) {
+          setTimeout(() => {
+            this.dismissLoader();
+          }, 400);
         }
       };
       img.src = this.framePath(i);
     }
-  }
-
-  private framePath(n: number): string {
-    const padded = String(n).padStart(4, '0');
-    return `https://rassweiler-it.de/images/codepen/frames/frame_${padded}.jpg`;
   }
 
   private loadRemainingFrames(): void {
@@ -157,19 +245,32 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
     this.rafId = requestAnimationFrame(() => this.renderLoop());
   }
 
+  private dismissLoader(): void {
+    this.canvasReady = true;
+    this.drawFrame(0);
+    setTimeout(() => {
+      this.startHeroEntrance();
+      this.initBubbles();
+    }, 400);
+    this.loadRemainingFrames();
+  }
+
   private startHeroEntrance(): void {
     if (typeof gsap === 'undefined') return;
     gsap.fromTo('.h-eyebrow', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.1, ease: 'power3.out' });
     gsap.fromTo('.h-title', { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.1, delay: 0.3, ease: 'power3.out' });
     gsap.fromTo('.h-sub', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9, delay: 0.6, ease: 'power3.out' });
     gsap.fromTo('.h-cta-row', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.85, ease: 'power3.out' });
-    gsap.fromTo('.scroll-ind', { opacity: 0 }, { opacity: 1, duration: 0.8, delay: 1.2, ease: 'power2.out' });
+    gsap.fromTo('#sind', { opacity: 0 }, { opacity: 1, duration: 0.8, delay: 1.2, ease: 'power2.out' });
     gsap.fromTo('.side-label', { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.8, delay: 1, ease: 'power2.out' });
+    gsap.fromTo('.welcome-text', { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 1.2, delay: 0.4, ease: 'power3.out' });
+    gsap.fromTo('.welcome-line', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, delay: 0.6, stagger: 0.15, ease: 'power3.out' });
+    setTimeout(() => {
+      this.initScrollTrigger();
+    }, 500);
   }
 
   private initScrollTrigger(): void {
-    const revealStart = 0.28;
-    const revealEnd = 0.60;
     const heroText = this.heroTextRef.nativeElement;
     const heroRevealText = this.heroRevealTextRef.nativeElement;
     const revealInner = this.revealInnerRef.nativeElement;
@@ -177,13 +278,15 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
     const scrollInd = this.scrollIndRef.nativeElement;
     const grad = this.gradRef.nativeElement;
 
-    ScrollTrigger.create({
+    const revealStart = 0.28;
+    const revealEnd = 0.60;
+
+    this.heroScrollTrigger = ScrollTrigger.create({
       trigger: '#hero-scroll',
       start: 'top top',
       end: 'bottom bottom',
       onUpdate: (self: any) => {
         const p = self.progress;
-
         if (p > revealStart && p < revealEnd) {
           const revealProgress = (p - revealStart) / (revealEnd - revealStart);
           const eased = revealProgress < 0.5 ?
@@ -198,17 +301,63 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
           heroRevealText.style.opacity = '0';
           revealInner.style.transform = 'translateY(100%)';
         }
-
         this.targetFrame = p * (this.FRAME_COUNT - 1);
         scrubBar.style.width = p * 100 + '%';
-
         const textP = Math.max(0, Math.min(1, (p - 0.08) / 0.32));
         heroText.style.opacity = String(1 - textP);
-        heroText.style.transform = 'translateY(' + textP * -80 + 'px)';
-
+        heroText.style.transform = 'translateY(' + (textP * -80) + 'px)';
         scrollInd.style.opacity = String(Math.max(0, 1 - p * 14));
         grad.style.opacity = String(Math.min(1, 0.85 + p * 0.15));
       }
     });
+
+    this.heroVisibilityTrigger = ScrollTrigger.create({
+      trigger: '#hero-scroll',
+      start: 'top top',
+      end: 'bottom bottom',
+      onEnter: () => {
+        this.rafRunning = true;
+        this.renderLoop();
+      },
+      onLeave: () => {
+        this.rafRunning = false;
+      },
+      onEnterBack: () => {
+        this.rafRunning = true;
+        this.renderLoop();
+      }
+    });
+  }
+
+  private initBubbles(): void {
+    if (typeof gsap === 'undefined' || typeof document === 'undefined') return;
+
+    const wrapper = this.bubblesWrapperRef.nativeElement;
+    const bubblesGroup = wrapper.querySelector('#bubbles');
+
+    if (!bubblesGroup) return;
+
+    bubblesGroup.querySelectorAll('path').forEach((path: any) => {
+      const rand = Math.floor(Math.random() * this.bubblesColors.length);
+      gsap.set(path, { fill: this.bubblesColors[rand] });
+    });
+
+    this.setTexts();
+  }
+
+  private setTexts(): void {
+    const wrapper = this.bubblesWrapperRef.nativeElement;
+    const texts = wrapper.querySelector('#svg-texts');
+    if (!texts) return;
+
+    const slide = wrapper.querySelector(`.slide[count="${this.currentSlide}"]`) as HTMLElement | null;
+    if (!slide) return;
+
+    const t1 = (slide.getAttribute('data-1') || '').toUpperCase();
+    const t2 = (slide.getAttribute('data-2') || '').toUpperCase();
+
+    const textEls = texts.querySelectorAll('text');
+    if (textEls[0]) textEls[0].textContent = t1;
+    if (textEls[1]) textEls[1].textContent = t2;
   }
 }

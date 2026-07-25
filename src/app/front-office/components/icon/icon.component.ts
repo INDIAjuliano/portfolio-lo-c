@@ -1,5 +1,6 @@
 import { Component, Input, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
 import iconSet from '@iconify-json/mdi/icons.json';
+import iconSetIc from '@iconify-json/ic/icons.json';
 
 const ALIAS: Record<string, string> = {
   arrow_right_alt: 'arrow-right',
@@ -14,7 +15,19 @@ const ALIAS: Record<string, string> = {
   mail: 'email',
   business: 'briefcase',
   person: 'account',
-  restaurant: 'silverware-fork-knife'
+  restaurant: 'silverware-fork-knife',
+  chevron_left: 'chevron-left',
+  expand_more: 'chevron-down',
+  account_circle: 'account-circle',
+  settings: 'cog',
+  help: 'help',
+  logout: 'logout',
+  edit: 'pencil',
+  delete: 'delete',
+  add: 'plus',
+  search: 'magnify',
+  calendar_today: 'calendar',
+  category: 'shape'
 };
 
 @Component({
@@ -50,6 +63,7 @@ export class IconComponent {
   @Input() color: string = 'currentColor';
   @Input() class: string = '';
   @Input() viewBox: string = '0 0 24 24';
+  @Input() collection: 'mdi' | 'ic' = 'mdi';
 
   get cls(): string {
     return this.class ? `app-icon ${this.class}` : 'app-icon';
@@ -60,12 +74,20 @@ export class IconComponent {
   }
 
   private resolvedName(): string {
-    return ALIAS[this.name] ?? this.name;
+    const base = ALIAS[this.name] ?? this.name;
+    if (this.collection === 'ic') {
+      return `baseline-${base}`;
+    }
+    return base;
   }
 
   get pathData(): string[] {
-    const icons = (iconSet as any).icons;
-    const icon = icons && icons[this.resolvedName()];
+    const set = this.collection === 'ic' ? (iconSetIc as any) : (iconSet as any);
+    const icons = set.icons;
+    let icon = icons && icons[this.resolvedName()];
+    if (!icon?.body && this.collection === 'ic') {
+      icon = icons && icons[`outline-${this.name}`];
+    }
     if (!icon?.body) return [];
     const result: string[] = [];
     const regex = /d="([^"]*)"/g;

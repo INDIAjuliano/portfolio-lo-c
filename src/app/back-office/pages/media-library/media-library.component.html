@@ -1,0 +1,219 @@
+<div class="media-library">
+  <div class="filter-tabs">
+    <button class="tab" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">All</button>
+    <button class="tab" [class.active]="currentFilter === 'People'" (click)="setFilter('People')">People</button>
+    <button class="tab" [class.active]="currentFilter === 'Cars'" (click)="setFilter('Cars')">Cars</button>
+    <button class="tab" [class.active]="currentFilter === 'Cities'" (click)="setFilter('Cities')">Cities</button>
+    <button class="tab" [class.active]="currentFilter === 'Animals'" (click)="setFilter('Animals')">Animals</button>
+  </div>
+
+  <div class="stats-mini">
+    <div class="stat-item">
+      <div class="stat-icon">
+        <app-icon name="photo_library" size="20"></app-icon>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number">{{ images.length }}</div>
+        <div class="stat-label">Total images</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">
+        <app-icon name="folder" size="20"></app-icon>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number">{{ categoriesCount }}</div>
+        <div class="stat-label">Categories</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <app-icon name="search" size="18" style="color: var(--text-muted);"></app-icon>
+      <input type="text" placeholder="Search in library...">
+    </div>
+    <div class="toolbar-actions">
+      @if (selectedAlbum) {
+        <button class="btn-back" (click)="clearAlbumSelection()">
+          <app-icon name="arrow_left" size="18"></app-icon>
+          Back to albums
+        </button>
+      }
+      @if (!selectedAlbum) {
+        <div class="view-toggle">
+          <button class="view-btn" [class.active]="albumViewMode === 'grid'" (click)="albumViewMode = 'grid'">
+            <app-icon name="grid_view" size="18"></app-icon>
+          </button>
+          <button class="view-btn" [class.active]="albumViewMode === 'table'" (click)="albumViewMode = 'table'">
+            <app-icon name="view_list" size="18"></app-icon>
+          </button>
+        </div>
+      }
+      <button class="btn-add">
+        <app-icon name="add" size="18"></app-icon>
+        Add new
+      </button>
+    </div>
+  </div>
+
+  @if (selectedAlbum) {
+    <div class="album-header">
+      <div class="album-cover">
+        <img [src]="selectedAlbum.cover" [alt]="selectedAlbum.name" loading="lazy">
+      </div>
+      <div class="album-info">
+        <h3>{{ selectedAlbum.name }}</h3>
+        <p>{{ selectedAlbum.photosCount }} photo{{ selectedAlbum.photosCount > 1 ? 's' : '' }}</p>
+      </div>
+    </div>
+
+    @if (viewMode === 'grid') {
+      <div class="gallery-grid">
+        @for (img of pagedImages; track img.id) {
+          <div class="gallery-item">
+            <div class="image-wrapper">
+              <img [src]="img.url" [alt]="img.alt" loading="lazy">
+              <span class="image-tag">{{ img.category }}</span>
+              <div class="image-overlay">
+                <div class="quick-actions">
+                  <button class="edit-btn">
+                    <app-icon name="edit" size="18"></app-icon>
+                  </button>
+                  <button class="delete-btn" (click)="deleteImage(img.id)">
+                    <app-icon name="delete" size="18"></app-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="image-info">
+              <div class="meta-top">
+                <span class="title">{{ img.title }}</span>
+                <span class="badge-type">{{ img.type }}</span>
+              </div>
+              <div class="meta-bottom">
+                <span class="date">
+                  <app-icon name="calendar_today" size="14"></app-icon>
+                  {{ img.date }}
+                </span>
+                <span class="category">{{ img.category }}</span>
+              </div>
+              @if (img.status === 'draft') {
+                <div class="draft-label">📝 Brouillon</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="media-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (img of pagedImages; track img.id) {
+              <tr>
+                <td>
+                  <div class="thumb">
+                    <img [src]="img.url" [alt]="img.alt" loading="lazy">
+                  </div>
+                </td>
+                <td>{{ img.title }}</td>
+                <td>{{ img.category }}</td>
+                <td>{{ img.type }}</td>
+                <td>{{ img.date }}</td>
+                <td>
+                  <span class="status-badge" [class.published]="img.status === 'published'" [class.draft]="img.status === 'draft'" [class.archived]="img.status === 'archived'">
+                    {{ img.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn">
+                      <app-icon name="edit" size="18"></app-icon>
+                    </button>
+                    <button class="icon-btn" (click)="deleteImage(img.id)">
+                      <app-icon name="delete" size="18"></app-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+        <app-icon name="chevron_left" size="18"></app-icon>
+      </button>
+      @for (page of [].constructor(totalPages); track $index) {
+        <button class="page-btn" [class.active]="currentPage === $index + 1" (click)="goToPage($index + 1)">
+          {{ $index + 1 }}
+        </button>
+      }
+      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+        <app-icon name="chevron_right" size="18"></app-icon>
+      </button>
+    </div>
+  } @else {
+    @if (albumViewMode === 'grid') {
+      <div class="albums-grid">
+        @for (album of filteredAlbums; track album.id) {
+          <div class="album-card" (click)="selectAlbum(album.id)">
+            <div class="album-cover">
+              <img [src]="album.cover" [alt]="album.name" loading="lazy">
+            </div>
+            <div class="album-info">
+              <h4>{{ album.name }}</h4>
+              <p>{{ album.photosCount }} photo{{ album.photosCount > 1 ? 's' : '' }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="media-table">
+          <thead>
+            <tr>
+              <th>Cover</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Photos</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (album of filteredAlbums; track album.id) {
+              <tr class="clickable-row" (click)="selectAlbum(album.id)">
+                <td>
+                  <div class="thumb">
+                    <img [src]="album.cover" [alt]="album.name" loading="lazy">
+                  </div>
+                </td>
+                <td>{{ album.name }}</td>
+                <td>{{ album.category }}</td>
+                <td>{{ album.photosCount }}</td>
+                <td>
+                  <span class="status-badge" [class.published]="album.status === 'published'" [class.draft]="album.status === 'draft'">
+                    {{ album.status === 'published' ? 'Publié' : 'Brouillon' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,135 @@
+<div class="theme-studio">
+  <!-- Top Navigation -->
+
+
+  <main class="studio-main">
+
+
+    <div class="studio-layout">
+      <!-- Main Content -->
+      <div class="studio-content">
+        <!-- Current Theme -->
+        <section class="studio-section">
+          <div class="studio-section-header">
+            <h3 class="studio-section-title">Thème actuel</h3>
+            <button class="studio-link">Modifier</button>
+          </div>
+          <div class="glass-panel studio-current-theme">
+            <div class="studio-current-grid">
+              <div class="studio-current-image">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsRnbYfhy7f9Yrs0WkbwkzPwhpKHP7WLsYq1w9wEJygIIxGTZzsx_oKNxYPo3MAApLCrtMLAsG7HVxeekQJciI5QT9TNCnOakCHXxa-c98VqjiHV9xugabtJsjYC7Gygja3UJKAr_pYI_nGqv8b1cjTZUBVLtV4RC4E4AjRvld1ZBKs3cN8Yt9EaN3hXyOZ6gMdgT9H1DqjTY_mEyX8sADAErf-9kFHdwcYOUz5MmCi9YeRKaaQDYXJiUhVOrTaf7sFLFq-XUk5DY" alt="Current theme preview">
+                <span class="studio-badge">ACTIF</span>
+              </div>
+              <div class="studio-current-info">
+                <h4 class="studio-current-name">{{ selectedTheme.name }}</h4>
+                <p class="studio-current-desc">Thème sélectionné dans le portail admin. Appliqué automatiquement sur toutes les pages du site.</p>
+                <div class="studio-swatches-row">
+                  <div class="studio-swatch" [style.background]="selectedTheme.accent"></div>
+                  <div class="studio-swatch" [style.background]="selectedTheme.buttonBg"></div>
+                  <div class="studio-swatch" [style.background]="selectedTheme.light"></div>
+                  <div class="studio-swatch" [style.background]="selectedTheme.text"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Discover -->
+        <section class="studio-section">
+          <div class="studio-section-header">
+            <h3 class="studio-section-title">Découvrir</h3>
+            <div class="studio-view-toggles">
+              <button class="studio-toggle-btn active">
+                <app-icon name="apps" collection="ic" size="20"></app-icon>
+              </button>
+              <button class="studio-toggle-btn">
+                <app-icon name="view-list" collection="ic" size="20"></app-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="studio-grid">
+            @for (theme of themes; track theme.name) {
+              <div class="glass-panel studio-card" [class.active]="selectedTheme.name === theme.name" (click)="openThemeModal(theme)">
+                <div class="studio-card-image">
+                  <img [src]="theme.previewImage" [alt]="theme.name + ' preview'">
+                  <div class="studio-card-overlay">
+                    <button class="studio-preview-btn">Aperçu</button>
+                    <button class="studio-fav-btn">
+                      <app-icon name="favorite" collection="ic" size="20"></app-icon>
+                    </button>
+                  </div>
+                </div>
+                <div class="studio-card-body">
+                  <div class="studio-card-header">
+                    <h5 class="studio-card-title">{{ theme.name }}</h5>
+                    <span class="studio-badge-sm" [class.premium]="theme.name === 'India-J'" [class.free]="theme.name !== 'India-J'">
+                      {{ theme.name === 'India-J' ? 'PREMIUM' : 'GRATUIT' }}
+                    </span>
+                  </div>
+                  <p class="studio-card-desc">{{ theme.description }}</p>
+                </div>
+                <div class="studio-card-footer">
+                  <span class="studio-card-author">Thème prédéfini</span>
+                  <button class="studio-install-btn" [class.installed]="selectedTheme.name === theme.name" title="{{ selectedTheme.name === theme.name ? 'Actif' : 'Installer' }}">
+                    @if (selectedTheme.name === theme.name) {
+                      <app-icon name="check" collection="ic" size="18"></app-icon>
+                    } @else {
+                      <app-icon name="download" collection="ic" size="18"></app-icon>
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Theme Customization Modal -->
+  @if (showThemeModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Personnaliser le thème</h3>
+          <button class="modal-close" (click)="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-question">Ce thème utilise la même structure. Voulez-vous changer uniquement la couleur ?</p>
+          <div class="modal-checkboxes">
+            <label class="modal-checkbox">
+              <input type="checkbox" [(ngModel)]="applyColorsOnly" />
+              <span class="modal-checkmark"></span>
+              <span class="modal-check-label">Changer uniquement les couleurs</span>
+            </label>
+            <label class="modal-checkbox">
+              <input type="checkbox" [(ngModel)]="applyStructure" disabled />
+              <span class="modal-checkmark"></span>
+              <span class="modal-check-label">Changer la structure (même thème)</span>
+            </label>
+            <div class="modal-colors-preview">
+              <span class="modal-swatch" [style.background]="selectedTheme.accent"></span>
+              <span class="modal-swatch" [style.background]="selectedTheme.buttonBg"></span>
+              <span class="modal-swatch" [style.background]="selectedTheme.light"></span>
+              <span class="modal-swatch" [style.background]="selectedTheme.text"></span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" (click)="closeModal()">Annuler</button>
+          <button class="modal-btn modal-btn-validate" (click)="confirmThemeChange()">Valider</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Floating Action Button -->
+  <div class="studio-fab">
+    <button class="studio-fab-btn">
+      <app-icon name="add" collection="ic" size="28"></app-icon>
+    </button>
+  </div>
+</div>

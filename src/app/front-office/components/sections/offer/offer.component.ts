@@ -11,8 +11,10 @@ import { IconComponent } from '../../icon/icon.component';
 })
 export class OfferComponent {
   offers = [
-    { icon: 'business', label: 'Corporate' },
-    { icon: 'person', label: 'Personal' },
-    { icon: 'restaurant', label: 'Culinary' }
+    { icon: 'photo_camera', label: 'Wedding' },
+    { icon: 'portrait', label: 'Portrait' },
+    { icon: 'event', label: 'Corporate' },
+    { icon: 'travel_explore', label: 'Lifestyle' },
+    { icon: 'movie', label: 'Fashion' }
   ];
 }

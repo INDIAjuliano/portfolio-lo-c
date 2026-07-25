@@ -1,0 +1,68 @@
+<!-- HERO GALERIE -->
+<section class="gallery-hero">
+  <div class="gallery-hero-bg"></div>
+  <div class="gallery-hero-content">
+    <h1>Galerie</h1>
+    <p>Une sélection de mes travaux photographiques</p>
+  </div>
+</section>
+
+<!-- FILTRES -->
+<section class="gallery-filters">
+  <div class="gallery-inner">
+    <div class="filters-wrapper">
+      <button class="filter-btn" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">Tous</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'portrait'" (click)="setFilter('portrait')">Portrait</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'landscape'" (click)="setFilter('landscape')">Paysage</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'cinematic'" (click)="setFilter('cinematic')">Cinématique</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'culinary'" (click)="setFilter('culinary')">Culinaire</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'realestate'" (click)="setFilter('realestate')">Immobilier</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'corporate'" (click)="setFilter('corporate')">Corporate</button>
+      <button class="filter-btn" [class.active]="currentFilter === 'events'" (click)="setFilter('events')">Événements</button>
+    </div>
+  </div>
+</section>
+
+<!-- GRILLE GALERIE -->
+<section class="gallery-grid-section">
+  <div class="gallery-inner">
+    <div class="gallery-grid" #galleryGrid>
+      @for (item of getFilteredItems(); track item.id; let i = $index) {
+        <div class="gallery-item"
+             [class.gallery-item-large]="item.size === 'large'"
+             [class.gallery-item-tall]="item.size === 'tall'"
+             [class.gallery-item-wide]="item.size === 'wide'"
+             (click)="openLightbox(i)">
+          <img [src]="item.image" [alt]="item.title" loading="lazy">
+          <div class="overlay">
+            <span class="category-tag">{{ item.category }}</span>
+            <span class="title">{{ item.title }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="lightbox-overlay" [class.active]="lightboxOpen" (click)="onLightboxOverlayClick($event)">
+  <div class="lightbox-content">
+    <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close">
+      <app-icon name="close" size="24"></app-icon>
+    </button>
+    <button class="lightbox-nav lightbox-nav-prev" (click)="navigateGallery(-1)" aria-label="Previous">
+      <app-icon name="arrow-left" size="24"></app-icon>
+    </button>
+    <button class="lightbox-nav lightbox-nav-next" (click)="navigateGallery(1)" aria-label="Next">
+      <app-icon name="arrow-right" size="24"></app-icon>
+    </button>
+    <img *ngIf="currentLightboxItem" [src]="currentLightboxItem.large || currentLightboxItem.image" [alt]="currentLightboxItem.title">
+    <div class="lightbox-counter">
+      {{ currentGalleryIndex + 1 }} / {{ currentFilteredItems.length }}
+    </div>
+    <div class="lightbox-info" *ngIf="currentLightboxItem">
+      <div class="lb-title">{{ currentLightboxItem.title }}</div>
+      <div class="lb-category">{{ currentLightboxItem.category }}</div>
+    </div>
+  </div>
+</div>

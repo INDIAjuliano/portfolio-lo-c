@@ -6,6 +6,9 @@ export class ThemeService {
   private isDarkSubject = new BehaviorSubject<boolean>(false);
   isDark$ = this.isDarkSubject.asObservable();
 
+  private heroVariantSubject = new BehaviorSubject<'hero1' | 'hero2'>('hero1');
+  heroVariant$ = this.heroVariantSubject.asObservable();
+
   constructor() {
     this.initTheme();
   }
@@ -17,6 +20,15 @@ export class ThemeService {
     const isDark = saved ? saved === 'dark' : prefersDark;
     this.applyTheme(isDark);
     this.isDarkSubject.next(isDark);
+    const adminTheme = localStorage.getItem('adminTheme');
+    if (adminTheme) {
+      try {
+        const parsed = JSON.parse(adminTheme);
+        if (parsed && parsed.heroVariant) {
+          this.setHeroVariant(parsed.heroVariant);
+        }
+      } catch (e) {}
+    }
   }
 
   toggleTheme(): void {
@@ -25,6 +37,14 @@ export class ThemeService {
     this.applyTheme(next);
     this.isDarkSubject.next(next);
     localStorage.setItem('theme', next ? 'dark' : 'light');
+  }
+
+  setHeroVariant(variant: 'hero1' | 'hero2'): void {
+    this.heroVariantSubject.next(variant);
+  }
+
+  getCurrentHeroVariant(): 'hero1' | 'hero2' {
+    return this.heroVariantSubject.value;
   }
 
   private applyTheme(isDark: boolean): void {

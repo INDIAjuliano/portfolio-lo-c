@@ -1,3 +1,44 @@
+.rooms-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 64px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(184, 150, 90, 0.12);
+}
+
+.rooms-title-row .tag-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.rooms-title-row .tag-line::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.rooms-title-row .big-serif {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.rooms-title-row .big-serif em {
+  font-style: italic;
+  color: var(--accent-light);
+}
+
 .portfolio-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);

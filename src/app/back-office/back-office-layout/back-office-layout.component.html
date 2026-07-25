@@ -1,1 +1,105 @@
-<p>back-office-layout works!</p>
+<div class="admin-layout">
+  <!-- Sidebar Toggle -->
+  <div class="sidebar-toggle-wrap" id="sidebarToggleWrap">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" (click)="toggleSidebar()">
+      <app-icon [name]="sidebarToggleIcon" size="18"></app-icon>
+      <span class="tooltip">{{ sidebarTooltip }}</span>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">P</div>
+      <div class="brand-text">Mampii<span>.</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Library</div>
+      <a routerLink="/admin/media-library" routerLinkActive="active">
+        <app-icon name="photo_library" size="20"></app-icon>
+        Media library
+      </a>
+      <a routerLink="/admin/about-me" routerLinkActive="active">
+        <app-icon name="person" size="20"></app-icon>
+        About me
+      </a>
+      <div class="nav-label">Appearance</div>
+
+      <div class="nav-label">Language</div>
+      <div class="lang-select">
+        <button class="lang-select-btn" (click)="toggleLangMenu()">
+          <app-icon name="language" size="20"></app-icon>
+          <span>{{ currentLangLabel }}</span>
+          <app-icon name="expand_more" size="18"></app-icon>
+        </button>
+        <div class="lang-menu" [class.open]="isLangMenuOpen">
+          @for (lang of languages; track lang.code) {
+            <button class="lang-item" [class.active]="currentLang === lang.code" (click)="selectLang(lang.code)">
+              <span class="lang-flag">{{ lang.flag }}</span>
+              <span class="lang-name">{{ lang.name }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+            <a routerLink="/admin/theme" routerLinkActive="active">
+              <app-icon name="palette" size="20"></app-icon>
+              Theme
+            </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div>
+          <h1>Dashboard</h1>
+          <div class="subtitle" id="pageSubtitle">Welcome back, Alexander</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="theme-toggle" (click)="toggleTheme()">
+          <app-icon [name]="isDark ? 'light_mode' : 'dark_mode'" size="20"></app-icon>
+          <span>{{ isDark ? 'Clair' : 'Sombre' }}</span>
+        </button>
+        <div class="user-menu" id="userMenu">
+          <button class="user-btn" id="userBtn" (click)="toggleDropdown()">
+            <div class="user-avatar-sm">AG</div>
+            <span class="user-name">Alexander</span>
+            <app-icon name="expand_more" size="18"></app-icon>
+          </button>
+          <div class="user-dropdown" id="userDropdown" [class.open]="isDropdownOpen">
+            <div class="dropdown-user-info">
+              <div class="dropdown-name">Alexander G.</div>
+              <div class="dropdown-email">alex&#64;mampii.com</div>
+            </div>
+            <button class="dropdown-item" data-action="profile">
+              <app-icon name="account_circle" size="20"></app-icon>
+              Mon profil
+            </button>
+            <button class="dropdown-item" data-action="settings">
+              <app-icon name="settings" size="20"></app-icon>
+              Paramètres
+            </button>
+            <button class="dropdown-item" data-action="help">
+              <app-icon name="help" size="20"></app-icon>
+              Aide
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" data-action="logout">
+              <app-icon name="logout" size="20"></app-icon>
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <router-outlet></router-outlet>
+  </main>
+</div>

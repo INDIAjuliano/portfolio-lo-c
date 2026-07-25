@@ -1,13 +1,11 @@
 .rooms {
   margin-top: 3rem;
-  padding: 0 0 120px;
   transition: background 0.4s ease;
 }
 
 .rooms-inner {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 50px;
 }
 
 .rooms-title-row {
@@ -62,6 +60,7 @@
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  border-radius: 4px;
 }
 
 .r-card.r-main { grid-row: span 2; }
@@ -71,46 +70,54 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.8s ease;
+  transition: transform 0.7s ease;
 }
 
 .r-card.r-main .r-img { height: 640px; }
 .r-card:not(.r-main) .r-img { height: 316px; }
 
-.r-card:hover .r-img { transform: scale(1.04); }
+.r-card:hover .r-img { transform: scale(1.06); }
 
 .r-info {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40px 36px;
+  inset: 0;
+  padding: 24px;
   background: linear-gradient(to top,
-    rgba(8, 6, 10, 0.92) 0%,
-    rgba(8, 6, 10, 0.3) 60%,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.1) 50%,
     transparent 100%);
-  transform: translateY(8px);
-  transition: transform 0.4s;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
-.r-card:hover .r-info { transform: translateY(0); }
+.r-card:hover .r-info { opacity: 1; }
 
 .r-type {
   font-size: 9px;
-  letter-spacing: 0.3em;
+  font-weight: 500;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 6px;
+  color: var(--accent-light);
+  transform: translateY(16px);
+  transition: transform 0.4s ease 0.05s;
 }
+
+.r-card:hover .r-type { transform: translateY(0); }
 
 .r-name {
   font-family: 'Archivo Narrow', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: #ffffff;
-  margin-bottom: 8px;
   line-height: 1.1;
+  transform: translateY(16px);
+  transition: transform 0.4s ease;
 }
+
+.r-card:hover .r-name { transform: translateY(0); }
 
 .r-price {
   font-size: 12px;

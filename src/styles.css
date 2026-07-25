@@ -3,9 +3,9 @@
 /* VARIABLES GLOBALES */
 /* ============================================================ */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9f9f9;
-  --bg-tertiary: #f3f3f4;
+  --bg-primary: #fafaf9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f2ed;
   --bg-dark: #0a0a0a;
   --bg-dark2: #141414;
   --text-primary: #1a1c1c;
@@ -20,7 +20,7 @@
   --btn-primary-text: #ffffff;
   --btn-primary-hover: #1a1c1c;
   --loader-bg: #0a0a0a;
-  --curtain-color1: #2a2a2a;
+  --curtain-color1: #000000;
   --curtain-color2: #1a1a1a;
   --logo-color: #1a1c1c;
   --nav-link-color: #4c4546;
@@ -29,6 +29,7 @@
   --accent: #b8965a;
   --accent-light: #e2c98a;
   --accent-dark: #7a5c2e;
+  --accent-hover: #a07d4a;
   transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
 
@@ -50,7 +51,7 @@
   --btn-primary-text: #000000;
   --btn-primary-hover: #e0e0e0;
   --loader-bg: #0a0a0a;
-  --curtain-color1: #2a2a2a;
+  --curtain-color1: #000000;
   --curtain-color2: #1a1a1a;
   --logo-color: #f0f0f0;
   --nav-link-color: #a0a0a0;
@@ -59,6 +60,7 @@
   --accent: #b8965a;
   --accent-light: #e2c98a;
   --accent-dark: #7a5c2e;
+  --accent-hover: #a07d4a;
 }
 
 /* ============================================================ */
@@ -144,10 +146,8 @@ body {
 /* LAYOUT */
 /* ============================================================ */
 .container {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding-left: 48px;
-  padding-right: 48px;
 }
 
 @media (max-width: 768px) {
@@ -337,4 +337,39 @@ body {
   display: inline-block;
   flex-shrink: 0;
   vertical-align: middle;
+}
+
+/* ============================================================ */
+/* HERO VARIANT SWITCHING */
+/* ============================================================ */
+/* Default: show hero1 (app-hero), hide hero2 (app-hero2) */
+app-hero {
+  display: block;
+}
+app-hero2 {
+  display: block;
+}
+
+/* When India-J or Vert or Orange theme is active: hide hero2, show hero1 */
+[data-hero-variant="hero1"] app-hero2 {
+  display: none !important;
+}
+[data-hero-variant="hero1"] app-hero {
+  display: block;
+}
+
+/* When Violet theme is active: hide hero1, show hero2 */
+[data-hero-variant="hero2"] app-hero {
+  display: none !important;
+}
+[data-hero-variant="hero2"] app-hero2 {
+  display: block;
+}
+
+/* Fallback: if no data-hero-variant is set, show both (default behavior) */
+body:not([data-hero-variant]) app-hero {
+  display: block;
+}
+body:not([data-hero-variant]) app-hero2 {
+  display: block;
 }
