@@ -1,9 +1,15 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { forkJoin, map, Observable, switchMap, of, catchError } from 'rxjs';
 import { IconComponent } from '../../../front-office/components/icon/icon.component';
+import { ApiService, AlbumCreateRequest, Category, MediaItem } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
-interface MediaItem {
-  id: number;
+interface MediaItemLocal {
+  id?: number;
   title: string;
   category: string;
   type: string;
@@ -15,6 +21,7 @@ interface MediaItem {
   status: string;
   albumId: number;
   albumName: string;
+  albums: { id: number; name: string }[];
 }
 
 interface Album {
@@ -24,110 +31,38 @@ interface Album {
   category: string;
   photosCount: number;
   status: 'published' | 'draft';
+  description?: string;
+  coverUrl?: string;
+  mediaIds: number[];
+  categoryId?: number;
+}
+
+const DEFAULT_ALBUM_COVER = 'https://images.pexels.com/photos/10965788/pexels-photo-10965788.jpeg';
+
+interface MediaFormData {
+  title: string;
+  slug: string;
+  description: string;
+  type: string;
+  imageUrl: string;
+  videoUrl: string;
+  tags: string[];
+  isPublished: boolean;
+  isFeatured: boolean;
 }
 
 @Component({
   selector: 'app-media-library',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './media-library.component.html',
   styleUrl: './media-library.component.css'
 })
 export class MediaLibraryComponent implements OnInit, OnDestroy {
-  images: MediaItem[] = [
-    {
-      id: 1,
-      title: 'Chevrolet Corvette C8',
-      category: 'Cars',
-      type: 'Photo',
-      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAtwh-yTiMGrGHQFWwYI9yXYGIXolAUSnpn_o7ZqdM9grAZCE72GTAv8_uHNEOr02y8Pn_55umWCB_yrsRa0OO2pqyRtWvtQDomDCTmKtauld3AJOMgn9GhgVexyLDQGyAFMomwF5Dx6RL7hAO-um0QEPKfmArTcLbqhP1M9h1t9x-Dok0R1BmFJvtyo5b1pzgKJT62M2J3I7QZq964-SSglgYRCYebWxkEXD_BUAnS_mwlgcIYTQdu',
-      date: '20 Jan 2024',
-      alt: 'Chevrolet Corvette C8 rouge sur route de montagne',
-      description: 'Photographie automobile mettant en valeur la ligne sportive du véhicule.',
-      keywords: ['Chevrolet Corvette', 'voiture sport', 'photographie automobile'],
-      status: 'published',
-      albumId: 1,
-      albumName: 'Automobile'
-    },
-    {
-      id: 2,
-      title: 'Urban Portrait',
-      category: 'People',
-      type: 'Photo',
-      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzdR-cEKxuAmS0_ioeHhSSAnFG6nTpGNmmmmSBPcAhNRa4Wu08p-T2HAhXjtYV0dRzRChjqa6PF_lvfilCLhuQR-j3VPL2r8zikb7pGlUBzNKXYI8YqhajEYI6NQ2sTEmquXyeOknmoZu3ZKMFAHMnHH3MV6gg7-xO5_bDOnEwGh7zokP3qNrRX3S7xWmGCpPrY4hxiAGwg635hLR34QOQb9qD698c5-qfVOGA_AAuKDV9uNWKXjQK',
-      date: '12 Jan 2024',
-      alt: 'Portrait urbain dans les rues de Paris',
-      description: 'Photographie de rue mettant en valeur l\'atmosphère de la ville.',
-      keywords: ['portrait urbain', 'photographie de rue', 'Paris'],
-      status: 'published',
-      albumId: 2,
-      albumName: 'Portrait'
-    },
-    {
-      id: 3,
-      title: 'City Skyline',
-      category: 'Cities',
-      type: 'Photo',
-      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4Pqzv-htMPtL7l9C-wKhr4h8r_AkhPUpS4ywa3it7ZlpjyLQ9_-Jt1rqxaPWhgB27Cajy5ZQD5US9Wxs4_cbYDLZbHKq8xUmohvvgjCvFnVMpKfbTCJt0IF8nfqyuK8Jf0yzhp6mMA8XDd-R1_ZPnAbcPu1gPxIkwQTrtyW0JZGtWDec1LIHjuGdYvk2KLuz22qSlbmieYlK8_k9pIMKg_RJq8koEAdO4Qthnw5TFUpq7YHVISCsq',
-      date: '8 Jan 2024',
-      alt: 'Skyline de nuit de New York',
-      description: 'Photographie urbaine capturant l\'énergie de la ville.',
-      keywords: ['skyline', 'New York', 'photographie urbaine'],
-      status: 'draft',
-      albumId: 3,
-      albumName: 'Urban'
-    },
-    {
-      id: 4,
-      title: 'Wildlife Safari',
-      category: 'Animals',
-      type: 'Photo',
-      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4GWnoboXR08tQX5eZ-lDFIlK0_Cq9CBYVKYSRbtu6z7U4XJTXAruAilRjyQwLdXHuefgOQ5TyTeZNHG9u4fLG2k2C9He9MQaWiKsvWoya1_2NR5MIOnaw3QHXo7_xm_82KhTZmybmdt35eKQo2VMLh6uBU-rNhTq-gor15vHSqXPAGa76btWtyZTp6K7iTj76cvWzlDLzTfL4Y5NcU1XTqf1Ou9EwN7FBoUdfauB8l6Jg5rElpZP-',
-      date: '15 Jan 2024',
-      alt: 'Lion dans la savane africaine',
-      description: 'Photographie animalière capturant la beauté de la faune sauvage.',
-      keywords: ['lion', 'savane africaine', 'photographie animalière'],
-      status: 'published',
-      albumId: 4,
-      albumName: 'Nature'
-    }
-  ];
-
-  albums: Album[] = [
-    {
-      id: 1,
-      name: 'Automobile',
-      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAtwh-yTiMGrGHQFWwYI9yXYGIXolAUSnpn_o7ZqdM9grAZCE72GTAv8_uHNEOr02y8Pn_55umWCB_yrsRa0OO2pqyRtWvtQDomDCTmKtauld3AJOMgn9GhgVexyLDQGyAFMomwF5Dx6RL7hAO-um0QEPKfmArTcLbqhP1M9h1t9x-Dok0R1BmFJvtyo5b1pzgKJT62M2J3I7QZq964-SSglgYRCYebWxkEXD_BUAnS_mwlgcIYTQdu',
-      category: 'Cars',
-      photosCount: 1,
-      status: 'published'
-    },
-    {
-      id: 2,
-      name: 'Portrait',
-      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzdR-cEKxuAmS0_ioeHhSSAnFG6nTpGNmmmmSBPcAhNRa4Wu08p-T2HAhXjtYV0dRzRChjqa6PF_lvfilCLhuQR-j3VPL2r8zikb7pGlUBzNKXYI8YqhajEYI6NQ2sTEmquXyeOknmoZu3ZKMFAHMnHH3MV6gg7-xO5_bDOnEwGh7zokP3qNrRX3S7xWmGCpPrY4hxiAGwg635hLR34QOQb9qD698c5-qfVOGA_AAuKDV9uNWKXjQK',
-      category: 'People',
-      photosCount: 1,
-      status: 'published'
-    },
-    {
-      id: 3,
-      name: 'Urban',
-      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4Pqzv-htMPtL7l9C-wKhr4h8r_AkhPUpS4ywa3it7ZlpjyLQ9_-Jt1rqxaPWhgB27Cajy5ZQD5US9Wxs4_cbYDLZbHKq8xUmohvvgjCvFnVMpKfbTCJt0IF8nfqyuK8Jf0yzhp6mMA8XDd-R1_ZPnAbcPu1gPxIkwQTrtyW0JZGtWDec1LIHjuGdYvk2KLuz22qSlbmieYlK8_k9pIMKg_RJq8koEAdO4Qthnw5TFUpq7YHVISCsq',
-      category: 'Cities',
-      photosCount: 1,
-      status: 'draft'
-    },
-    {
-      id: 4,
-      name: 'Nature',
-      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4GWnoboXR08tQX5eZ-lDFIlK0_Cq9CBYVKYSRbtu6z7U4XJTXAruAilRjyQwLdXHuefgOQ5TyTeZNHG9u4fLG2k2C9He9MQaWiKsvWoya1_2NR5MIOnaw3QHXo7_xm_82KhTZmybmdt35eKQo2VMLh6uBU-rNhTq-gor15vHSqXPAGa76btWtyZTp6K7iTj76cvWzlDLzTfL4Y5NcU1XTqf1Ou9EwN7FBoUdfauB8l6Jg5rElpZP-',
-      category: 'Animals',
-      photosCount: 1,
-      status: 'published'
-    }
-  ];
-
+  images: MediaItemLocal[] = [];
+  albums: Album[] = [];
+  categories: Category[] = [];
+  mediaItems: MediaItem[] = [];
   currentFilter = 'all';
   isDropdownOpen = false;
   isDark = false;
@@ -136,13 +71,88 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   currentPage = 1;
   selectedAlbumId: number | null = null;
   albumViewMode: 'grid' | 'table' = 'grid';
+  albumMediaTypeFilter: 'all' | 'image' | 'video' = 'all';
+  isLoading = false;
+  errorMessage: string | null = null;
+
+  selectedMediaIds: Set<number> = new Set();
+  isSelectionMode = false;
+
+  showAddModal = false;
+  newAlbum: AlbumCreateRequest = {
+    title: '',
+    description: '',
+    coverUrl: '',
+    mediaIds: [],
+    categoryId: 0
+  };
+  isSubmitting = false;
+  editingAlbumId: number | null = null;
+  coverSource: 'url' | 'file' = 'url';
+  coverFile: File | null = null;
+  coverPreview: string | null = null;
+
+  showMediaModal = false;
+  isEditingMedia = false;
+  editingMediaId: number | null = null;
+  mediaForm: MediaFormData = {
+    title: '',
+    slug: '',
+    description: '',
+    type: 'image',
+    imageUrl: '',
+    videoUrl: '',
+    tags: [],
+    isPublished: false,
+    isFeatured: false
+  };
+  isMediaSubmitting = false;
+  tagsInput = '';
+  mediaFiles: File[] = [];
+  mediaPreviews: string[] = [];
+  mediaSource: 'url' | 'file' = 'url';
+  currentAlbumId: number | null = null;
+
+  showDeleteConfirm = false;
+  deleteConfirmType: 'media' | 'album' = 'media';
+  deleteConfirmId: number | null = null;
+  isDeleteSubmitting = false;
+
+  showPreview = false;
+  previewMedia: { url: string; type: string; title: string } | null = null;
+  previewIndex = -1;
+
+  showToast = false;
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  private toastTimer: any = null;
+
+  constructor(private apiService: ApiService, private router: Router, private route: ActivatedRoute, private authService: AuthService) {}
 
   ngOnInit(): void {
     if (typeof document === 'undefined') return;
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
     const savedTheme = localStorage.getItem('adminTheme');
     this.isDark = savedTheme === 'dark';
     document.documentElement.setAttribute('data-theme', this.isDark ? 'dark' : 'light');
     document.addEventListener('click', this.closeDropdown);
+    this.loadDataFromApi();
+
+    this.route.paramMap.subscribe(params => {
+      const albumId = params.get('albumId');
+      if (albumId) {
+        const id = Number(albumId);
+        if (!isNaN(id)) {
+          this.selectedAlbumId = id;
+          this.currentAlbumId = id;
+        }
+      } else {
+        this.currentAlbumId = null;
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -151,20 +161,104 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     }
   }
 
-  get filteredImages(): MediaItem[] {
+  loadDataFromApi(): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    this.apiService.getMedia().subscribe({
+      next: (media) => {
+        this.mediaItems = media;
+        this.images = media.map((m: MediaItem) => {
+          const absoluteImageUrl = this.getAbsoluteUrl(m.imageUrl);
+          const absoluteVideoUrl = this.getAbsoluteUrl(m.videoUrl);
+          return {
+            id: m.id,
+            title: m.title || 'Sans titre',
+            category: m.albumName || 'Non classé',
+            type: m.type === 'video' ? 'Vidéo' : 'Photo',
+            url: absoluteImageUrl || absoluteVideoUrl || '',
+            date: m.createdAt ? new Date(m.createdAt).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR'),
+            alt: m.title || '',
+            description: m.description || '',
+            keywords: m.tags || [],
+            status: m.isPublished ? 'published' : 'draft',
+            albumId: m.albumId || 0,
+            albumName: m.albumName || 'Non classé',
+            albums: (m as any).albums || []
+          };
+        });
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load media', err);
+        this.errorMessage = 'Impossible de charger les médias depuis le serveur.';
+        this.isLoading = false;
+      }
+    });
+
+    this.apiService.getAlbums().subscribe({
+      next: (albums) => {
+        this.albums = albums.map((a: any) => ({
+          id: a.id,
+          name: a.title || 'Sans titre',
+          cover: a.coverUrl || a.coverMedia?.imageUrl || a.coverMedia?.videoUrl || DEFAULT_ALBUM_COVER,
+          category: a.category?.name || 'Non classé',
+          photosCount: (a.mediaIds || []).length,
+          status: a.coverMedia?.isPublished ? 'published' : 'draft',
+          description: a.description || '',
+          coverUrl: a.coverUrl || '',
+          mediaIds: a.mediaIds || []
+        }));
+      },
+      error: (err) => {
+        console.error('Failed to load albums', err);
+      }
+    });
+
+    this.apiService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories = categories;
+      },
+      error: (err) => {
+        console.error('Failed to load categories', err);
+      }
+    });
+  }
+
+  private getAbsoluteUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('//')) return 'https:' + url;
+    if (url.startsWith('/')) return environment.apiUrl.replace('/api', '') + url;
+    return environment.apiUrl.replace('/api', '') + '/' + url;
+  }
+
+  get filteredImages(): MediaItemLocal[] {
     let result = this.images;
     if (this.selectedAlbumId !== null) {
-      result = result.filter(img => img.albumId === this.selectedAlbumId);
+      result = result.filter(img => img.albums.some(a => a.id === this.selectedAlbumId));
     }
     if (this.currentFilter !== 'all') {
       result = result.filter(img => img.category === this.currentFilter);
     }
+    if (this.selectedAlbumId !== null && this.albumMediaTypeFilter !== 'all') {
+      result = result.filter(img => {
+        if (this.albumMediaTypeFilter === 'image') return img.type === 'Photo';
+        if (this.albumMediaTypeFilter === 'video') return img.type === 'Vidéo';
+        return true;
+      });
+    }
     return result;
   }
 
-  get albumImages(): MediaItem[] {
+  get albumImages(): MediaItemLocal[] {
     if (this.selectedAlbumId === null) return [];
-    return this.images.filter(img => img.albumId === this.selectedAlbumId);
+    return this.images.filter(img => img.albums.some(a => a.id === this.selectedAlbumId));
+  }
+
+  setAlbumMediaTypeFilter(filter: 'all' | 'image' | 'video'): void {
+    this.albumMediaTypeFilter = filter;
+    this.currentPage = 1;
   }
 
   get filteredAlbums(): Album[] {
@@ -176,7 +270,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     return [...new Set(this.images.map(img => img.category))].length;
   }
 
-  get pagedImages(): MediaItem[] {
+  get pagedImages(): MediaItemLocal[] {
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredImages.slice(start, start + this.pageSize);
   }
@@ -197,11 +291,15 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   selectAlbum(albumId: number): void {
     this.selectedAlbumId = albumId;
     this.currentPage = 1;
+    this.router.navigate(['/admin/media-library', 'album', albumId]);
   }
 
   clearAlbumSelection(): void {
     this.selectedAlbumId = null;
+    this.currentAlbumId = null;
+    this.albumMediaTypeFilter = 'all';
     this.currentPage = 1;
+    this.router.navigate(['/admin/media-library']);
   }
 
   setPageSize(size: number): void {
@@ -214,10 +312,133 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   }
 
   deleteImage(id: number): void {
-    this.images = this.images.filter(img => img.id !== id);
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
+    this.deleteConfirmType = 'media';
+    this.deleteConfirmId = id;
+    this.showDeleteConfirm = true;
+  }
+
+  toggleMediaSelection(id: number): void {
+    if (this.selectedMediaIds.has(id)) {
+      this.selectedMediaIds.delete(id);
+    } else {
+      this.selectedMediaIds.add(id);
     }
+  }
+
+  toggleSelectionMode(): void {
+    this.isSelectionMode = !this.isSelectionMode;
+    if (!this.isSelectionMode) {
+      this.selectedMediaIds.clear();
+    }
+  }
+
+  deleteSelectedMedia(): void {
+    if (this.selectedMediaIds.size === 0) return;
+
+    const idsToDelete = Array.from(this.selectedMediaIds);
+    this.isDeleteSubmitting = true;
+    this.deleteConfirmType = 'media';
+    this.showDeleteConfirm = true;
+
+    const deleteRequests = idsToDelete.map(id =>
+      this.apiService.deleteMedia(id)
+    );
+
+    forkJoin(deleteRequests).subscribe({
+      next: () => {
+        this.images = this.images.filter(img => !this.selectedMediaIds.has(img.id!));
+        this.selectedMediaIds.clear();
+        this.isSelectionMode = false;
+        if (this.currentPage > this.totalPages) {
+          this.currentPage = this.totalPages;
+        }
+        this.showToast = true;
+        this.toastMessage = `${idsToDelete.length} média(s) supprimé(s)`;
+        this.toastType = 'success';
+        this.closeDeleteConfirm();
+      },
+      error: () => {
+        this.showToast = true;
+        this.toastMessage = 'Erreur lors de la suppression';
+        this.toastType = 'error';
+        this.isDeleteSubmitting = false;
+      }
+    });
+  }
+
+  confirmDelete(): void {
+    if (this.deleteConfirmId === null) return;
+
+    if (this.deleteConfirmType === 'media' && this.selectedMediaIds.size > 1) {
+      this.deleteSelectedMedia();
+      return;
+    }
+
+    const id = this.deleteConfirmId;
+    this.isDeleteSubmitting = true;
+
+    if (this.deleteConfirmType === 'media') {
+      this.apiService.deleteMedia(id).subscribe({
+        next: () => {
+          this.images = this.images.filter(img => img.id !== id);
+          if (this.currentPage > this.totalPages) {
+            this.currentPage = this.totalPages;
+          }
+          this.showToast = true;
+          this.toastMessage = 'Média supprimé avec succès';
+          this.toastType = 'success';
+          this.closeDeleteConfirm();
+        },
+        error: (err) => {
+          this.showToast = true;
+          this.toastMessage = 'Erreur lors de la suppression';
+          this.toastType = 'error';
+          this.isDeleteSubmitting = false;
+        }
+      });
+    } else {
+      this.apiService.deleteAlbum(id).subscribe({
+        next: () => {
+          this.albums = this.albums.filter(a => a.id !== id);
+          if (this.selectedAlbumId === id) {
+            this.selectedAlbumId = null;
+          }
+          this.showToast = true;
+          this.toastMessage = 'Album supprimé avec succès';
+          this.toastType = 'success';
+          this.closeDeleteConfirm();
+        },
+        error: (err) => {
+          this.showToast = true;
+          this.toastMessage = 'Erreur lors de la suppression';
+          this.toastType = 'error';
+          this.isDeleteSubmitting = false;
+        }
+      });
+    }
+  }
+
+  closeDeleteConfirm(): void {
+    this.showDeleteConfirm = false;
+    this.isDeleteSubmitting = false;
+    this.deleteConfirmId = null;
+  }
+
+  deleteAlbum(id: number | undefined): void {
+    if (id === undefined) return;
+    this.deleteConfirmType = 'album';
+    this.deleteConfirmId = id;
+    this.showDeleteConfirm = true;
+  }
+
+  showToastMessage(message: string, type: 'success' | 'error' = 'success'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.showToast = true;
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
   }
 
   toggleDropdown(): void {
@@ -227,4 +448,417 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   closeDropdown = (): void => {
     this.isDropdownOpen = false;
   };
+
+  openAddModal(): void {
+    this.editingAlbumId = null;
+    this.newAlbum = {
+      title: '',
+      description: '',
+      coverUrl: '',
+      mediaIds: [],
+      categoryId: this.categories.length > 0 ? this.categories[0].id : 0
+    };
+    this.coverSource = 'url';
+    this.coverFile = null;
+    this.coverPreview = null;
+    this.showAddModal = true;
+  }
+
+  openEditAlbumModal(album: Album): void {
+    this.editingAlbumId = album.id ?? null;
+    this.newAlbum = {
+      title: album.name || '',
+      description: album.description || '',
+      coverUrl: album.coverUrl || album.cover || '',
+      mediaIds: album.mediaIds || [],
+      categoryId: album.categoryId || 0
+    };
+    this.coverFile = null;
+    this.coverPreview = album.cover || null;
+    this.coverSource = (album.coverUrl || album.cover) ? 'url' : 'file';
+    this.showAddModal = true;
+  }
+
+  closeAddModal(): void {
+    this.showAddModal = false;
+    this.isSubmitting = false;
+    this.editingAlbumId = null;
+  }
+
+  onMediaChange(mediaId: number): void {
+    const media = this.mediaItems.find(m => m.id === mediaId);
+    if (media && media.imageUrl) {
+      this.newAlbum.coverUrl = media.imageUrl;
+    }
+  }
+
+  onCoverFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+    this.coverFile = file;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.coverPreview = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+
+    this.apiService.uploadAlbumCover(file).subscribe({
+      next: (res) => {
+        this.newAlbum.coverUrl = res.url;
+      },
+      error: (err) => {
+        alert('Erreur lors de l\'upload de l\'image: ' + (err.error?.message || err.message));
+        this.coverFile = null;
+        this.coverPreview = null;
+      }
+    });
+  }
+
+  submitAlbum(): void {
+    if (!this.newAlbum.title) {
+      this.showToastMessage('Le titre est requis', 'error');
+      return;
+    }
+    if (!this.newAlbum.categoryId) {
+      this.showToastMessage('Veuillez sélectionner une catégorie', 'error');
+      return;
+    }
+
+    this.isSubmitting = true;
+    const payload: any = {
+      title: this.newAlbum.title,
+      description: this.newAlbum.description || null,
+      coverUrl: this.newAlbum.coverUrl || null,
+      mediaIds: this.newAlbum.mediaIds || [],
+      categoryId: this.newAlbum.categoryId || null
+    };
+
+    if (this.editingAlbumId) {
+      this.apiService.updateAlbum(this.editingAlbumId!, payload).subscribe({
+        next: (updated) => {
+          const cover = updated?.coverUrl || payload.coverUrl || DEFAULT_ALBUM_COVER;
+          this.albums = this.albums.map(a => a.id === this.editingAlbumId ? {
+            ...a,
+            name: payload.title || a.name,
+            cover,
+            description: payload.description || a.description || '',
+            coverUrl: payload.coverUrl || a.coverUrl || '',
+            mediaIds: payload.mediaIds || a.mediaIds || [],
+            categoryId: payload.categoryId ?? a.categoryId
+          } : a);
+          this.closeAddModal();
+          this.showToastMessage('Album modifié avec succès', 'success');
+        },
+        error: (err) => {
+          this.showToastMessage('Erreur lors de la modification', 'error');
+          this.isSubmitting = false;
+        }
+      });
+    } else {
+      this.apiService.createAlbum(payload).subscribe({
+        next: (createdAlbum) => {
+          this.loadDataFromApi();
+          this.closeAddModal();
+          this.showToastMessage('Album créé avec succès', 'success');
+        },
+        error: (err) => {
+          this.showToastMessage('Erreur lors de la création', 'error');
+          this.isSubmitting = false;
+        }
+      });
+    }
+  }
+
+  openCreateMediaModal(): void {
+    this.isEditingMedia = false;
+    this.editingMediaId = null;
+    this.mediaForm = {
+      title: '',
+      slug: '',
+      description: '',
+      type: 'image',
+      imageUrl: '',
+      videoUrl: '',
+      tags: [],
+      isPublished: false,
+      isFeatured: false
+    };
+    this.tagsInput = '';
+    this.mediaFiles = [];
+    this.mediaPreviews = [];
+    this.mediaSource = 'url';
+    this.showMediaModal = true;
+  }
+
+  openEditMediaModal(media: MediaItem): void {
+    this.isEditingMedia = true;
+    this.editingMediaId = media.id;
+    this.mediaForm = {
+      title: media.title || '',
+      slug: media.slug || '',
+      description: media.description || '',
+      type: media.type || 'image',
+      imageUrl: media.imageUrl || '',
+      videoUrl: media.videoUrl || '',
+      tags: media.tags || [],
+      isPublished: media.isPublished,
+      isFeatured: media.isFeatured
+    };
+    this.tagsInput = (media.tags || []).join(', ');
+    this.showMediaModal = true;
+  }
+
+  openEditMediaModalById(id: number | undefined): void {
+    if (id === undefined) return;
+    const media = this.mediaItems.find(m => m.id === id);
+    if (media) {
+      this.openEditMediaModal(media);
+    }
+  }
+
+  updateTagsFromInput(): void {
+    this.mediaForm.tags = this.tagsInput
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+  }
+
+  onMediaFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    const files = Array.from(input.files);
+    const remaining = 10 - this.mediaFiles.length;
+    const toAdd = files.slice(0, Math.max(0, remaining));
+
+    if (toAdd.length < files.length) {
+      this.showToastMessage(`Vous ne pouvez ajouter que ${remaining} fichier(s) supplémentaire(s)`, 'error');
+    }
+
+    for (const file of toAdd) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.mediaPreviews.push(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    this.mediaFiles.push(...toAdd);
+  }
+
+  onMediaTypeChange(): void {
+    this.mediaFiles = [];
+    this.mediaPreviews = [];
+  }
+
+  removeMediaFile(index: number): void {
+    this.mediaFiles.splice(index, 1);
+    this.mediaPreviews.splice(index, 1);
+  }
+
+  isImageFile(file: File): boolean {
+    return ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'].includes(file.type);
+  }
+
+  isVideoFile(file: File): boolean {
+    return ['video/mp4', 'video/avi', 'video/x-msvideo'].includes(file.type);
+  }
+
+  uploadMediaFile(file: File): Observable<{url: string; type: string}> {
+    return this.apiService.uploadMedia(file).pipe(
+      map(res => ({ url: res.url, type: res.type }))
+    );
+  }
+
+  closeMediaModal(): void {
+    this.showMediaModal = false;
+    this.isMediaSubmitting = false;
+    this.mediaFiles = [];
+    this.mediaPreviews = [];
+  }
+
+  openLightbox(id: number): void {
+    const media = this.images.find(img => img.id === id);
+    if (!media) return;
+    this.previewIndex = this.filteredImages.findIndex(img => img.id === id);
+    this.previewMedia = {
+      url: media.url,
+      type: media.type === 'Vidéo' ? 'video' : 'image',
+      title: media.title
+    };
+    this.showPreview = true;
+  }
+
+  navigatePreview(direction: number): void {
+    const items = this.filteredImages;
+    if (!items.length) return;
+    this.previewIndex = (this.previewIndex + direction + items.length) % items.length;
+    const media = items[this.previewIndex];
+    this.previewMedia = {
+      url: media.url,
+      type: media.type === 'Vidéo' ? 'video' : 'image',
+      title: media.title
+    };
+  }
+
+  closePreview(): void {
+    this.showPreview = false;
+    this.previewMedia = null;
+    this.previewIndex = -1;
+  }
+
+  linkMediaToAlbum(mediaId: number): void {
+    if (this.currentAlbumId) {
+      this.apiService.addMediaToAlbum(this.currentAlbumId, mediaId).subscribe({
+        next: () => this.loadDataFromApi(),
+        error: () => console.warn('Failed to link media to album')
+      });
+    }
+  }
+
+  submitMediaForm(): void {
+    if (!this.mediaForm.title && this.mediaFiles.length === 0) {
+      this.showToastMessage('Le titre ou des fichiers sont requis', 'error');
+      return;
+    }
+    if (!this.mediaForm.type) {
+      this.showToastMessage('Le type est requis', 'error');
+      return;
+    }
+
+    if (this.mediaFiles.length > 0) {
+      const invalidFile = this.mediaFiles.find(file => {
+        if (this.mediaForm.type === 'image') return !this.isImageFile(file);
+        if (this.mediaForm.type === 'video') return !this.isVideoFile(file);
+        return false;
+      });
+
+      if (invalidFile) {
+        this.showToastMessage(`Type de fichier invalide. Pour ${this.mediaForm.type === 'image' ? 'images' : 'vidéos'}: ${this.mediaForm.type === 'image' ? 'jpeg, jpg, png, webp, gif' : 'mp4, avi'}`, 'error');
+        return;
+      }
+    }
+
+    this.isMediaSubmitting = true;
+
+    if (this.isEditingMedia && this.editingMediaId) {
+      const payload = {
+        title: this.mediaForm.title,
+        slug: this.mediaForm.slug || this.mediaForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        description: this.mediaForm.description || null,
+        type: this.mediaForm.type,
+        imageUrl: this.mediaForm.imageUrl || null,
+        videoUrl: this.mediaForm.videoUrl || null,
+        tags: this.mediaForm.tags,
+        isPublished: this.mediaForm.isPublished,
+        isFeatured: this.mediaForm.isFeatured
+      };
+
+      this.apiService.updateMedia(this.editingMediaId, payload).subscribe({
+        next: () => {
+          this.loadDataFromApi();
+          this.closeMediaModal();
+          this.showToastMessage('Média modifié avec succès', 'success');
+        },
+        error: (err) => {
+          this.showToastMessage('Erreur lors de la modification', 'error');
+          this.isMediaSubmitting = false;
+        }
+      });
+      return;
+    }
+
+    const createMediaFromUpload = (index: number, uploadedUrls: {url: string; type: string}[]) => {
+      if (index >= uploadedUrls.length) {
+        this.loadDataFromApi();
+        this.closeMediaModal();
+        this.showToastMessage(`${uploadedUrls.length} média(s) créé(s) avec succès`, 'success');
+        return;
+      }
+
+      const upload = uploadedUrls[index];
+      const payload = {
+        title: this.mediaForm.title || `Media ${index + 1}`,
+        slug: this.mediaForm.slug || this.mediaForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `media-${Date.now()}-${index}`,
+        description: this.mediaForm.description || null,
+        type: upload.type,
+        imageUrl: upload.type === 'image' ? upload.url : null,
+        videoUrl: upload.type === 'video' ? upload.url : null,
+        tags: this.mediaForm.tags,
+        isPublished: this.mediaForm.isPublished,
+        isFeatured: this.mediaForm.isFeatured
+      };
+
+      this.apiService.createMedia(payload).pipe(
+        switchMap((res) => {
+          if (this.currentAlbumId && res?.id) {
+            return this.apiService.addMediaToAlbum(this.currentAlbumId, res.id).pipe(
+              map(() => res),
+              catchError(() => of(res))
+            );
+          }
+          return of(res);
+        })
+      ).subscribe({
+        next: () => createMediaFromUpload(index + 1, uploadedUrls),
+        error: () => {
+          this.showToastMessage(`Erreur lors de la création du média ${index + 1}`, 'error');
+          this.isMediaSubmitting = false;
+        }
+      });
+    };
+
+    if (this.mediaFiles.length > 0) {
+      const uploadPromises = this.mediaFiles.map(file => this.uploadMediaFile(file));
+      let uploadedUrls: {url: string; type: string}[] = [];
+
+      forkJoin(uploadPromises).subscribe({
+        next: (results) => {
+          uploadedUrls = results;
+          createMediaFromUpload(0, uploadedUrls);
+        },
+        error: (err) => {
+          this.showToastMessage('Erreur lors de l\'upload des fichiers', 'error');
+          this.isMediaSubmitting = false;
+        }
+      });
+    } else {
+      const payload = {
+        title: this.mediaForm.title,
+        slug: this.mediaForm.slug || this.mediaForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        description: this.mediaForm.description || null,
+        type: this.mediaForm.type,
+        imageUrl: this.mediaForm.imageUrl || null,
+        videoUrl: this.mediaForm.videoUrl || null,
+        tags: this.mediaForm.tags,
+        isPublished: this.mediaForm.isPublished,
+        isFeatured: this.mediaForm.isFeatured
+      };
+
+      this.apiService.createMedia(payload).pipe(
+        switchMap((res) => {
+          if (this.currentAlbumId && res?.id) {
+            return this.apiService.addMediaToAlbum(this.currentAlbumId, res.id).pipe(
+              map(() => res),
+              catchError(() => of(res))
+            );
+          }
+          return of(res);
+        })
+      ).subscribe({
+        next: (res) => {
+          this.loadDataFromApi();
+          this.closeMediaModal();
+          this.showToastMessage('Média créé avec succès', 'success');
+        },
+        error: (err) => {
+          this.showToastMessage('Erreur lors de la création', 'error');
+          this.isMediaSubmitting = false;
+        }
+      });
+    }
+  }
 }

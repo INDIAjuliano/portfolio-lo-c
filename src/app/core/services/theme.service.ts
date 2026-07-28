@@ -48,6 +48,7 @@ export class ThemeService {
   }
 
   private applyTheme(isDark: boolean): void {
+    if (typeof document === 'undefined') return;
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }
 }

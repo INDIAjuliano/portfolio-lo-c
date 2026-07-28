@@ -29,9 +29,11 @@
   </div>
 
   <div class="toolbar">
-    <div class="search-box">
-      <app-icon name="search" size="18" style="color: var(--text-muted);"></app-icon>
-      <input type="text" placeholder="Search in library...">
+    <div class="toolbar-left">
+      <div class="search-box">
+        <app-icon name="search" size="18" style="color: var(--text-muted);"></app-icon>
+        <input type="text" placeholder="Search in library...">
+      </div>
     </div>
     <div class="toolbar-actions">
       @if (selectedAlbum) {
@@ -50,38 +52,67 @@
           </button>
         </div>
       }
-      <button class="btn-add">
+      <button class="btn-add" (click)="openCreateMediaModal()">
+        <app-icon name="add_photo_alternate" size="18"></app-icon>
+        Add media
+      </button>
+      <button class="btn-add" (click)="openAddModal()">
         <app-icon name="add" size="18"></app-icon>
-        Add new
+        Add album
       </button>
     </div>
   </div>
 
-  @if (selectedAlbum) {
-    <div class="album-header">
-      <div class="album-cover">
-        <img [src]="selectedAlbum.cover" [alt]="selectedAlbum.name" loading="lazy">
+   @if (selectedAlbum) {
+    <div class="album-detail-header">
+      <button class="btn-back-album" (click)="clearAlbumSelection()">
+        <app-icon name="arrow_left" size="18"></app-icon>
+        Retour aux albums
+      </button>
+      <div class="album-header">
+        <div class="album-cover">
+          <img [src]="selectedAlbum.cover" [alt]="selectedAlbum.name" loading="lazy">
+        </div>
+        <div class="album-info">
+          <h3>{{ selectedAlbum.name }}</h3>
+          <p>{{ selectedAlbum.photosCount }} photo{{ selectedAlbum.photosCount > 1 ? 's' : '' }}</p>
+        </div>
       </div>
-      <div class="album-info">
-        <h3>{{ selectedAlbum.name }}</h3>
-        <p>{{ selectedAlbum.photosCount }} photo{{ selectedAlbum.photosCount > 1 ? 's' : '' }}</p>
+      <div class="album-type-filters">
+        <button class="filter-type-btn" [class.active]="albumMediaTypeFilter === 'all'" (click)="setAlbumMediaTypeFilter('all')">Tout</button>
+        <button class="filter-type-btn" [class.active]="albumMediaTypeFilter === 'image'" (click)="setAlbumMediaTypeFilter('image')">Images</button>
+        <button class="filter-type-btn" [class.active]="albumMediaTypeFilter === 'video'" (click)="setAlbumMediaTypeFilter('video')">Vidéos</button>
+        @if (!isSelectionMode) {
+          <button class="filter-type-btn selection-toggle" (click)="toggleSelectionMode()">
+            <app-icon name="checklist" size="16"></app-icon>
+            Sélection multiple
+          </button>
+        } @else {
+          <button class="filter-type-btn selection-toggle" (click)="toggleSelectionMode()">
+            <app-icon name="close" size="16"></app-icon>
+            Annuler
+          </button>
+          <button class="filter-type-btn selection-toggle selection-danger" (click)="deleteSelectedMedia()" [disabled]="selectedMediaIds.size === 0">
+            <app-icon name="delete" size="16"></app-icon>
+            Supprimer ({{ selectedMediaIds.size }})
+          </button>
+        }
       </div>
     </div>
 
     @if (viewMode === 'grid') {
       <div class="gallery-grid">
         @for (img of pagedImages; track img.id) {
-          <div class="gallery-item">
+          <div class="gallery-item" [class.selected]="selectedMediaIds.has(img.id!)" (click)="openLightbox(img.id!)">
             <div class="image-wrapper">
               <img [src]="img.url" [alt]="img.alt" loading="lazy">
-              <span class="image-tag">{{ img.category }}</span>
+              <div class="selection-checkbox">
+                <input type="checkbox" [checked]="selectedMediaIds.has(img.id!)" (change)="toggleMediaSelection(img.id!)" (click)="$event.stopPropagation()">
+              </div>
               <div class="image-overlay">
                 <div class="quick-actions">
-                  <button class="edit-btn">
-                    <app-icon name="edit" size="18"></app-icon>
-                  </button>
-                  <button class="delete-btn" (click)="deleteImage(img.id)">
-                    <app-icon name="delete" size="18"></app-icon>
+                  <button class="edit-btn" (click)="openEditMediaModalById(img.id)">
+                    <app-icon name="edit" size="20"></app-icon>
                   </button>
                 </div>
               </div>
@@ -96,10 +127,9 @@
                   <app-icon name="calendar_today" size="14"></app-icon>
                   {{ img.date }}
                 </span>
-                <span class="category">{{ img.category }}</span>
               </div>
               @if (img.status === 'draft') {
-                <div class="draft-label">📝 Brouillon</div>
+                <div class="draft-label">Draft</div>
               }
             </div>
           </div>
@@ -138,11 +168,8 @@
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button class="icon-btn">
+                    <button class="icon-btn" (click)="openEditMediaModalById(img.id)">
                       <app-icon name="edit" size="18"></app-icon>
-                    </button>
-                    <button class="icon-btn" (click)="deleteImage(img.id)">
-                      <app-icon name="delete" size="18"></app-icon>
                     </button>
                   </div>
                 </td>
@@ -170,9 +197,19 @@
     @if (albumViewMode === 'grid') {
       <div class="albums-grid">
         @for (album of filteredAlbums; track album.id) {
-          <div class="album-card" (click)="selectAlbum(album.id)">
+           <div class="album-card" (click)="selectAlbum(album.id!)">
             <div class="album-cover">
               <img [src]="album.cover" [alt]="album.name" loading="lazy">
+              <div class="album-overlay">
+                <div class="album-quick-actions">
+                  <button class="edit-btn" (click)="$event.stopPropagation(); openEditAlbumModal(album)">
+                    <app-icon name="edit" size="18"></app-icon>
+                  </button>
+                  <button class="delete-btn" type="button" (click)="$event.stopPropagation(); deleteAlbum(album.id)">
+                    <app-icon name="delete" size="18"></app-icon>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="album-info">
               <h4>{{ album.name }}</h4>
@@ -191,11 +228,12 @@
               <th>Category</th>
               <th>Photos</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             @for (album of filteredAlbums; track album.id) {
-              <tr class="clickable-row" (click)="selectAlbum(album.id)">
+              <tr class="clickable-row" (click)="selectAlbum(album.id!)">
                 <td>
                   <div class="thumb">
                     <img [src]="album.cover" [alt]="album.name" loading="lazy">
@@ -209,11 +247,404 @@
                     {{ album.status === 'published' ? 'Publié' : 'Brouillon' }}
                   </span>
                 </td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn" (click)="$event.stopPropagation(); openEditAlbumModal(album)">
+                      <app-icon name="edit" size="18"></app-icon>
+                    </button>
+                    <button class="icon-btn" type="button" (click)="$event.stopPropagation(); deleteAlbum(album.id)">
+                      <app-icon name="delete" size="18"></app-icon>
+                    </button>
+                  </div>
+                </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
     }
+  }
+
+   <!-- Add Album Modal -->
+   @if (showAddModal) {
+     <div class="modal-overlay" (click)="closeAddModal()">
+       <div class="modal-container" (click)="$event.stopPropagation()">
+         <div class="modal-header">
+           <h3 class="modal-title">{{ editingAlbumId ? 'Modifier l\'album' : 'Nouvel album' }}</h3>
+           <button class="modal-close" (click)="closeAddModal()">
+             <span class="material-symbols-outlined">close</span>
+           </button>
+         </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="albumTitle">Titre *</label>
+            <input
+              type="text"
+              id="albumTitle"
+              [(ngModel)]="newAlbum.title"
+              placeholder="Titre de l'album"
+              [disabled]="isSubmitting"
+            />
+          </div>
+          <div class="form-group">
+            <label>Source de la couverture</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="coverSource" value="url" [(ngModel)]="coverSource" [disabled]="isSubmitting">
+                <span>URL image</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="coverSource" value="file" [(ngModel)]="coverSource" [disabled]="isSubmitting">
+                <span>Cover image</span>
+              </label>
+            </div>
+          </div>
+          @if (coverSource === 'url') {
+            <div class="form-group">
+              <label for="albumCoverUrl">Cover URL</label>
+              <input
+                type="text"
+                id="albumCoverUrl"
+                [(ngModel)]="newAlbum.coverUrl"
+                placeholder="https://example.com/cover.jpg"
+                [disabled]="isSubmitting"
+              />
+              @if (newAlbum.coverUrl) {
+                <div class="cover-preview">
+                  <img [src]="newAlbum.coverUrl" alt="Cover preview">
+                  <button type="button" class="cover-remove" (click)="newAlbum.coverUrl = '';">
+                    <app-icon name="close" size="16"></app-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="form-group">
+              <label>Cover image</label>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onCoverFileSelected($event)"
+                [disabled]="isSubmitting"
+              />
+              @if (coverPreview) {
+                <div class="cover-preview">
+                  <img [src]="coverPreview" alt="Cover preview">
+                  <button type="button" class="cover-remove" (click)="coverPreview = null; newAlbum.coverUrl = ''; coverFile = null;">
+                    <app-icon name="close" size="16"></app-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <div class="form-group">
+            <label for="albumCategory">Catégorie *</label>
+            <select
+              id="albumCategory"
+              [(ngModel)]="newAlbum.categoryId"
+              [disabled]="isSubmitting || categories.length === 0"
+            >
+              @if (categories.length === 0) {
+                <option value="">Chargement des catégories...</option>
+              } @else {
+                @for (cat of categories; track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Médias de l'album</label>
+            <select
+              multiple
+              [(ngModel)]="newAlbum.mediaIds"
+              [disabled]="isSubmitting || mediaItems.length === 0"
+            >
+              @if (mediaItems.length === 0) {
+                <option value="">Chargement des médias...</option>
+              } @else {
+                @for (media of mediaItems; track media.id) {
+                  <option [value]="media.id">{{ media.title }} ({{ media.type }})</option>
+                }
+              }
+            </select>
+            <small class="form-hint">Maintenez Ctrl/Cmd pour sélectionner plusieurs médias</small>
+          </div>
+          <div class="form-group">
+            <label for="albumDescription">Description</label>
+            <textarea
+              id="albumDescription"
+              [(ngModel)]="newAlbum.description"
+              rows="3"
+              placeholder="Description de l'album..."
+              [disabled]="isSubmitting"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" (click)="closeAddModal()" [disabled]="isSubmitting">Annuler</button>
+          <button class="modal-btn modal-btn-validate" (click)="submitAlbum()" [disabled]="isSubmitting">
+            @if (isSubmitting) {
+              {{ editingAlbumId ? 'Modification...' : 'Création...' }}
+            } @else {
+              {{ editingAlbumId ? 'Modifier' : 'Créer l\'album' }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Media Create/Edit Modal -->
+  @if (showMediaModal) {
+    <div class="modal-overlay" (click)="closeMediaModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+         <div class="modal-header">
+          <h3 class="modal-title">
+            {{ isEditingMedia ? 'Modifier le média' : 'Nouveau média' }}
+            @if (currentAlbumId) {
+              <span class="modal-subtitle"> pour l'album #{{ currentAlbumId }}</span>
+            }
+          </h3>
+          <button class="modal-close" (click)="closeMediaModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="mediaTitle">Titre *</label>
+            <input
+              type="text"
+              id="mediaTitle"
+              [(ngModel)]="mediaForm.title"
+              placeholder="Titre du média"
+              [disabled]="isMediaSubmitting"
+            />
+          </div>
+          <div class="form-group">
+            <label for="mediaSlug">Slug</label>
+            <input
+              type="text"
+              id="mediaSlug"
+              [(ngModel)]="mediaForm.slug"
+              placeholder="slug-auto-genere"
+              [disabled]="isMediaSubmitting"
+            />
+          </div>
+          <div class="form-group">
+            <label for="mediaType">Type *</label>
+            <select
+              id="mediaType"
+              [(ngModel)]="mediaForm.type"
+              (ngModelChange)="onMediaTypeChange()"
+              [disabled]="isMediaSubmitting"
+            >
+              <option value="image">Image</option>
+              <option value="video">Vidéo</option>
+            </select>
+
+            @if (!isSelectionMode) {
+            <button class="btn-add" (click)="toggleSelectionMode()">
+              <app-icon name="checklist" size="18"></app-icon>
+              Sélection multiple
+            </button>
+            } @else {
+            <button class="btn-add" (click)="toggleSelectionMode()">
+              <app-icon name="close" size="18"></app-icon>
+              Annuler sélection
+            </button>
+            <button class="btn-add btn-danger" (click)="deleteSelectedMedia()" [disabled]="selectedMediaIds.size === 0">
+              <app-icon name="delete" size="18"></app-icon>
+              Supprimer ({{ selectedMediaIds.size }})
+            </button>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Source du média</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="mediaSource" value="url" [(ngModel)]="mediaSource" [disabled]="isMediaSubmitting">
+                <span>URL</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="mediaSource" value="file" [(ngModel)]="mediaSource" [disabled]="isMediaSubmitting">
+                <span>Fichier</span>
+              </label>
+            </div>
+          </div>
+          @if (mediaSource === 'url') {
+            <div class="form-group">
+              <label for="mediaImageUrl">URL Image</label>
+              <input
+                type="text"
+                id="mediaImageUrl"
+                [(ngModel)]="mediaForm.imageUrl"
+                placeholder="https://..."
+                [disabled]="isMediaSubmitting"
+              />
+            </div>
+            <div class="form-group">
+              <label for="mediaVideoUrl">URL Vidéo</label>
+              <input
+                type="text"
+                id="mediaVideoUrl"
+                [(ngModel)]="mediaForm.videoUrl"
+                placeholder="https://..."
+                [disabled]="isMediaSubmitting"
+              />
+            </div>
+          } @else {
+            <div class="form-group">
+              <label>{{ mediaForm.type === 'video' ? 'Vidéos (max 10)' : 'Images (max 10)' }}</label>
+              <input
+                type="file"
+                [attr.accept]="mediaForm.type === 'video' ? 'video/mp4,video/avi,video/x-msvideo' : 'image/jpeg,image/jpg,image/png,image/webp,image/gif'"
+                [multiple]="mediaForm.type === 'image'"
+                [disabled]="mediaForm.type === 'video' || isMediaSubmitting || mediaFiles.length >= 10"
+                (change)="onMediaFilesSelected($event)"
+              />
+              @if (mediaForm.type === 'video') {
+                <small class="form-hint">Upload de vidéos multiples non disponible. Utilisez l'URL pour les vidéos.</small>
+              }
+              @if (mediaPreviews.length > 0) {
+                <div class="media-previews">
+                  @for (preview of mediaPreviews; track $index) {
+                    <div class="media-preview">
+                      <img [src]="preview" alt="Preview">
+                      <button type="button" class="media-preview-remove" (click)="removeMediaFile($index)">
+                        <app-icon name="close" size="14"></app-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+          <div class="form-group">
+            <label for="mediaDescription">Description</label>
+            <textarea
+              id="mediaDescription"
+              [(ngModel)]="mediaForm.description"
+              rows="3"
+              placeholder="Description..."
+              [disabled]="isMediaSubmitting"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="mediaTags">Tags (séparés par des virgules)</label>
+            <input
+              type="text"
+              id="mediaTags"
+              [(ngModel)]="tagsInput"
+              (input)="updateTagsFromInput()"
+              placeholder="nature, mariage, portrait"
+              [disabled]="isMediaSubmitting"
+            />
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="mediaForm.isPublished" [disabled]="isMediaSubmitting">
+              <span>Publié</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="mediaForm.isFeatured" [disabled]="isMediaSubmitting">
+              <span>Mis en avant</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" (click)="closeMediaModal()" [disabled]="isMediaSubmitting">Annuler</button>
+          <button class="modal-btn modal-btn-validate" (click)="submitMediaForm()" [disabled]="isMediaSubmitting">
+            @if (isMediaSubmitting) {
+              Enregistrement...
+            } @else {
+              {{ isEditingMedia ? 'Enregistrer' : 'Créer' }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteConfirm) {
+    <div class="modal-overlay" (click)="closeDeleteConfirm()">
+      <div class="modal-container modal-container-sm" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Confirmer la suppression</h3>
+          <button class="modal-close" (click)="closeDeleteConfirm()" [disabled]="isDeleteSubmitting">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body modal-body-confirm">
+          <div class="confirm-icon">
+            <app-icon name="warning" size="48"></app-icon>
+          </div>
+          <p class="confirm-text">
+            Êtes-vous sûr de vouloir supprimer {{ deleteConfirmType === 'media' && selectedMediaIds.size > 1 ? 'ces ' + selectedMediaIds.size + ' médias' : 'ce média' }} ?
+            Cette action est irréversible.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" (click)="closeDeleteConfirm()" [disabled]="isDeleteSubmitting">Annuler</button>
+          <button class="modal-btn modal-btn-danger" (click)="confirmDelete()" [disabled]="isDeleteSubmitting">
+            @if (isDeleteSubmitting) {
+              Suppression...
+            } @else {
+              Supprimer
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Preview Modal -->
+  @if (showPreview && previewMedia) {
+    <div class="modal-overlay preview-overlay" (click)="closePreview()">
+      <div class="modal-container preview-container" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closePreview()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <div class="preview-main">
+          <button class="preview-nav preview-prev" (click)="$event.stopPropagation(); navigatePreview(-1)">
+            <app-icon name="chevron_left" size="28"></app-icon>
+          </button>
+          <div class="preview-content">
+            @if (previewMedia.type === 'video') {
+              <video [src]="previewMedia.url" controls autoplay class="preview-video"></video>
+            } @else {
+              <img [src]="previewMedia.url" [alt]="previewMedia.title">
+            }
+          </div>
+          <button class="preview-nav preview-next" (click)="$event.stopPropagation(); navigatePreview(1)">
+            <app-icon name="chevron_right" size="28"></app-icon>
+          </button>
+        </div>
+        <div class="preview-carousel">
+          @for (img of filteredImages; track img.id; let idx = $index) {
+            <div class="preview-thumb" [class.active]="idx === previewIndex" (click)="$event.stopPropagation(); previewIndex = idx; previewMedia = { url: img.url, type: img.type === 'Vidéo' ? 'video' : 'image', title: img.title }">
+              <img [src]="img.url" [alt]="img.title">
+            </div>
+          }
+        </div>
+        <div class="preview-title">{{ previewMedia.title }}</div>
+      </div>
+    </div>
+  }
+
+  <!-- Toast Notification -->
+  @if (showToast) {
+    <div class="toast-container" [class.toast-success]="toastType === 'success'" [class.toast-error]="toastType === 'error'">
+      <div class="toast-icon">
+        @if (toastType === 'success') {
+          <app-icon name="check_circle" size="22"></app-icon>
+        } @else {
+          <app-icon name="error" size="22"></app-icon>
+        }
+      </div>
+      <div class="toast-message">{{ toastMessage }}</div>
+    </div>
   }
 </div>

@@ -1,0 +1,116 @@
+<div class="categories-page">
+  <div class="page-header">
+    <h2>Catégories</h2>
+    <button class="btn-add" (click)="openCreateModal()">
+      <app-icon name="add" size="18"></app-icon>
+      Nouvelle catégorie
+    </button>
+  </div>
+
+  @if (isLoading) {
+    <p class="loading-text">Chargement...</p>
+  }
+
+  @if (errorMessage) {
+    <p class="error-text">{{ errorMessage }}</p>
+  }
+
+  @if (!isLoading && categories.length === 0) {
+    <p class="empty-text">Aucune catégorie pour le moment.</p>
+  }
+
+  @if (!isLoading && categories.length > 0) {
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Slug</th>
+            <th>Description</th>
+            <th>Icône</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cat of categories; track cat.id) {
+            <tr>
+              <td>{{ cat.name }}</td>
+              <td><code>{{ cat.slug }}</code></td>
+              <td>{{ cat.description || '-' }}</td>
+              <td>{{ cat.icon || '-' }}</td>
+              <td>
+                <div class="row-actions">
+                  <button class="icon-btn" (click)="openEditModal(cat)">
+                    <app-icon name="edit" size="18"></app-icon>
+                  </button>
+                  <button class="icon-btn danger" (click)="deleteCategory(cat.id, cat.name)">
+                    <app-icon name="delete" size="18"></app-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Modal -->
+  @if (showModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ isEditing ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}</h3>
+          <button class="modal-close" (click)="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="catName">Nom *</label>
+            <input
+              type="text"
+              id="catName"
+              [(ngModel)]="formData.name"
+              placeholder="Ex: Cars"
+              [disabled]="false"
+            />
+          </div>
+          <div class="form-group">
+            <label for="catSlug">Slug *</label>
+            <input
+              type="text"
+              id="catSlug"
+              [(ngModel)]="formData.slug"
+              placeholder="Ex: cars"
+            />
+          </div>
+          <div class="form-group">
+            <label for="catDesc">Description</label>
+            <textarea
+              id="catDesc"
+              [(ngModel)]="formData.description"
+              rows="3"
+              placeholder="Description de la catégorie"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="catIcon">Icône</label>
+            <input
+              type="text"
+              id="catIcon"
+              [(ngModel)]="formData.icon"
+              placeholder="Ex: photo_camera"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" (click)="closeModal()">Annuler</button>
+          <button class="modal-btn modal-btn-validate" (click)="submitForm()">
+            {{ isEditing ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,93 @@
+<div class="portfolio-page">
+  <div class="portfolio-hero">
+    <div class="portfolio-hero-bg"></div>
+    <div class="portfolio-hero-content">
+      <h1>Portfolio</h1>
+      <p>Découvrez mes réalisations</p>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <p>Chargement du portfolio...</p>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="error-state">
+      <p>{{ errorMessage }}</p>
+      <button class="btn-retry" (click)="loadPortfolio()">Réessayer</button>
+    </div>
+  }
+
+  @if (!isLoading && !errorMessage) {
+    <div class="portfolio-filters">
+      <div class="filters-wrapper">
+        @for (filter of availableFilters; track filter) {
+          <button
+            class="filter-btn"
+            [class.active]="currentFilter === filter"
+            (click)="setFilter(filter)"
+          >
+            {{ filter === 'all' ? 'Tout' : filter }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="portfolio-grid-section">
+      <div class="portfolio-inner">
+        @if (currentFilteredItems.length === 0) {
+          <div class="empty-state">
+            <p>Aucun média disponible pour le moment.</p>
+          </div>
+        } @else {
+          <div class="portfolio-grid">
+            @for (item of currentFilteredItems; track item.id; let i = $index) {
+              <div class="portfolio-item" (click)="openLightbox(i)">
+                <div class="portfolio-image-wrapper">
+                  <img [src]="item.imageUrl" [alt]="item.title" loading="lazy">
+                  <div class="portfolio-overlay">
+                    <div class="portfolio-overlay-content">
+                      <span class="portfolio-title">{{ item.title }}</span>
+                      <span class="portfolio-type">{{ item.type }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (lightboxOpen && currentLightboxItem) {
+    <div class="lightbox-overlay" [class.active]="lightboxOpen" (click)="onLightboxOverlayClick($event)">
+      <div class="lightbox-content">
+        <button class="lightbox-close" (click)="closeLightbox()">
+          <app-icon name="close" size="24"></app-icon>
+        </button>
+
+        <button class="lightbox-nav lightbox-nav-prev" (click)="navigateGallery(-1)">
+          <app-icon name="chevron_left" size="28"></app-icon>
+        </button>
+
+        <img [src]="currentLightboxItem.imageUrl" [alt]="currentLightboxItem.title">
+
+        <button class="lightbox-nav lightbox-nav-next" (click)="navigateGallery(1)">
+          <app-icon name="chevron_right" size="28"></app-icon>
+        </button>
+
+        <div class="lightbox-info">
+          <div class="lb-title">{{ currentLightboxItem.title }}</div>
+          <div class="lb-category">{{ currentLightboxItem.tags.join(' / ') }}</div>
+        </div>
+
+        <div class="lightbox-counter">
+          {{ currentLightboxIndex + 1 }} / {{ currentFilteredItems.length }}
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -6,10 +6,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const SLIDE_IMAGES = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBfvtw81gJIlBNNsilQgp43_PExsCFPAZPLGiLGo28pM5yM1gT0HgVeSobDbDZT39xdp0eu9QT7ujYAvcel-ypfbBOJ0Yaesh3YoT4mRNRRN5_04dfc6eGgfxJKDiaL-_FzZprHlmkwrFHsxGywo-24h_Qt6Oam_MAaOAPbalj5BRiJhhE3sajoLDlW6fmgUaiFBr4pspDf7FPOO52TUDhgvGxSH8eDd-yGZF8KDCri1aeOI672UnPE',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAtwh-yTiMGrGHQFWwYI9yXYGIXolAUSnpn_o7ZqdM9grAZCE72GTAv8_uHNEOr02y8Pn_55umWCB_yrsRa0OO2pqyRtWvtQDomDCTmKtauld3AJOMgn9GhgVexyLDQGyAFMomwF5Dx6RL7hAO-um0QEPKfmArTcLbqhP1M9h1t9x-Dok0R1BmFJvtyo5b1pzgKJT62M2J3I7QZq964-SSglgYRCYebWxkEXD_BUAnS_mwlgcIYTQdu',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBzdR-cEKxuAmS0_ioeHhSSAnFG6nTpGNmmmmSBPcAhNRa4Wu08p-T2HAhXjtYV0dRzRChjqa6PF_lvfilCLhuQR-j3VPL2r8zikb7pGlUBzNKXYI8YqhajEYI6NQ2sTEmquXyeOknmoZu3ZKMFAHMnHH3MV6gg7-xO5_bDOnEwGh7zokP3qNrRX3S7xWmGCpPrY4hxiAGwg635hLR34QOQb9qD698c5-qfVOGA_AAuKDV9uNWKXjQK',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuC4Pqzv-htMPtL7l9C-wKhr4h8r_AkhPUpS4ywa3it7ZlpjyLQ9_-Jt1rqxaPWhgB27Cajy5ZQD5US9Wxs4_cbYDLZbHKq8xUmohvvgjCvFnVMpKfbTCJt0IF8nfqyuK8Jf0yzhp6mMA8XDd-R1_ZPnAbcPu1gPxIkwQTrtyW0JZGtWDec1LIHjuGdYvk2KLuz22qSlbmieYlK8_k9pIMKg_RJq8koEAdO4Qthnw5TFUpq7YHVISCsq'
+  'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1265&h=362&fit=crop',
+  'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=1265&h=362&fit=crop',
+  'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1265&h=362&fit=crop',
+  'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1265&h=362&fit=crop'
 ];
 
 const VERT_SRC = `
@@ -455,6 +455,7 @@ export class Hero2Component implements AfterViewInit, OnDestroy {
 
   private initGsapAnimations(): void {
     this.initHero2ScrollTrigger();
+    this.initHero2DotsAndThumbs();
 
     const hero2Content = document.getElementById('hero2-content');
     if (hero2Content) {
@@ -470,13 +471,6 @@ export class Hero2Component implements AfterViewInit, OnDestroy {
       }));
     }
 
-    const hero2Dots = document.getElementById('hero2-dots');
-    if (hero2Dots) {
-      this.hero2GsapTweens.push(gsap.fromTo(hero2Dots, { opacity: 0 }, {
-        opacity: 1, duration: 0.8, delay: 1.4, ease: 'power2.out'
-      }));
-    }
-
     const hero2Bounce = document.querySelector('.hero2-scroll-indicator .material-symbols-outlined') as HTMLElement | null;
     if (hero2Bounce) {
       this.hero2GsapTweens.push(gsap.to(hero2Bounce, {
@@ -489,5 +483,33 @@ export class Hero2Component implements AfterViewInit, OnDestroy {
     }
 
     window.addEventListener('scroll', this.navScrollHandler);
+  }
+
+  private initHero2DotsAndThumbs(): void {
+    const dotsContainer = document.getElementById('hero2-dots');
+    const thumbsContainer = document.getElementById('hero2-thumbs');
+    if (!dotsContainer || !thumbsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    thumbsContainer.innerHTML = '';
+
+    SLIDE_IMAGES.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'hero2-dot' + (i === 0 ? ' hero2-dot-active' : '');
+      dot.setAttribute('type', 'button');
+      dot.addEventListener('click', () => this.goToSlide(i));
+      dotsContainer.appendChild(dot);
+
+      const thumb = document.createElement('button');
+      thumb.className = 'hero2-thumb' + (i === 0 ? ' hero2-thumb-active' : '');
+      thumb.setAttribute('type', 'button');
+      const img = document.createElement('img');
+      img.src = SLIDE_IMAGES[i];
+      img.alt = 'Slide ' + (i + 1);
+      img.loading = 'lazy';
+      thumb.appendChild(img);
+      thumb.addEventListener('click', () => this.goToSlide(i));
+      thumbsContainer.appendChild(thumb);
+    });
   }
 }

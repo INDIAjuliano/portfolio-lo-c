@@ -10,6 +10,7 @@ interface GalleryItem {
   image: string;
   large: string;
   size: string;
+  video?: string;
 }
 
 @Component({
@@ -157,6 +158,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
   lightboxOpen = false;
   currentGalleryIndex = 0;
   currentFilteredItems: GalleryItem[] = [];
+  isFullscreen = false;
 
   getFilteredItems(): GalleryItem[] {
     return this.currentFilter === 'all'
@@ -218,6 +220,24 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     this.currentGalleryIndex =
       (this.currentGalleryIndex + direction + this.currentFilteredItems.length) %
       this.currentFilteredItems.length;
+  }
+
+  goToSlide(index: number): void {
+    this.currentFilteredItems = this.getFilteredItems();
+    this.currentGalleryIndex = index;
+  }
+
+  toggleFullscreen(): void {
+    const lightboxContent = document.querySelector('.lightbox-content');
+    if (!lightboxContent) return;
+
+    if (!document.fullscreenElement) {
+      lightboxContent.requestFullscreen().catch(() => {});
+      this.isFullscreen = true;
+    } else {
+      document.exitFullscreen().catch(() => {});
+      this.isFullscreen = false;
+    }
   }
 
   onLightboxOverlayClick(event: MouseEvent): void {

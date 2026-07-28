@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
+
   {
     path: '',
     loadComponent: () => import('./front-office/front-office-layout/front-office-layout.component')
@@ -25,8 +26,18 @@ export const routes: Routes = [
         path: 'contact',
         loadComponent: () => import('./front-office/pages/contact/contact.component')
           .then(m => m.ContactComponent)
+      },
+      {
+        path: 'portfolio',
+        loadComponent: () => import('./front-office/pages/portfolio/portfolio.component')
+          .then(m => m.PortfolioComponent)
       }
     ]
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./front-office/pages/login/login.component')
+      .then(m => m.LoginComponent)
   },
   {
     path: 'admin',

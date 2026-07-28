@@ -20,6 +20,10 @@
         <app-icon name="photo_library" size="20"></app-icon>
         Media library
       </a>
+      <a routerLink="/admin/categories" routerLinkActive="active">
+        <app-icon name="category" size="20"></app-icon>
+        Categories
+      </a>
       <a routerLink="/admin/about-me" routerLinkActive="active">
         <app-icon name="person" size="20"></app-icon>
         About me
@@ -69,14 +73,14 @@
         </button>
         <div class="user-menu" id="userMenu">
           <button class="user-btn" id="userBtn" (click)="toggleDropdown()">
-            <div class="user-avatar-sm">AG</div>
-            <span class="user-name">Alexander</span>
+            <div class="user-avatar-sm">{{ userInitials }}</div>
+            <span class="user-name">{{ userName }}</span>
             <app-icon name="expand_more" size="18"></app-icon>
           </button>
           <div class="user-dropdown" id="userDropdown" [class.open]="isDropdownOpen">
             <div class="dropdown-user-info">
-              <div class="dropdown-name">Alexander G.</div>
-              <div class="dropdown-email">alex&#64;mampii.com</div>
+              <div class="dropdown-name">{{ userName }}</div>
+              <div class="dropdown-email">{{ userEmail }}</div>
             </div>
             <button class="dropdown-item" data-action="profile">
               <app-icon name="account_circle" size="20"></app-icon>
@@ -91,7 +95,7 @@
               Aide
             </button>
             <div class="dropdown-divider"></div>
-            <button class="dropdown-item danger" data-action="logout">
+            <button class="dropdown-item danger" (click)="logout()">
               <app-icon name="logout" size="20"></app-icon>
               Déconnexion
             </button>

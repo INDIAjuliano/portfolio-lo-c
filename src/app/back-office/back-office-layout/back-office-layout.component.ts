@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { IconComponent } from '../../front-office/components/icon/icon.component';
+import { AuthService } from '../../core/services/auth.service';
 
 interface LangOption {
   code: string;
@@ -38,6 +39,28 @@ export class BackOfficeLayoutComponent implements OnInit, OnDestroy {
     const found = this.languages.find(l => l.code === this.currentLang);
     return found ? `${found.flag} ${found.name}` : 'Langue';
   }
+
+  get userName(): string {
+    const user = this.authService.getCurrentUser();
+    if (!user) return 'Admin';
+    return [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+  }
+
+  get userEmail(): string {
+    return this.authService.getCurrentUser()?.email || '';
+  }
+
+  get userInitials(): string {
+    const user = this.authService.getCurrentUser();
+    if (!user) return 'A';
+    const name = [user.firstName, user.lastName].filter(Boolean).join(' ');
+    if (name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return user.email.slice(0, 2).toUpperCase();
+  }
+
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     if (typeof document === 'undefined') return;
@@ -171,6 +194,11 @@ export class BackOfficeLayoutComponent implements OnInit, OnDestroy {
     this.currentLang = code;
     this.isLangMenuOpen = false;
     localStorage.setItem('adminLang', code);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   private detectBrowserLang(): void {
