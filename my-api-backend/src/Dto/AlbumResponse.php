@@ -9,31 +9,45 @@ readonly class AlbumResponse
     public int $id;
     public string $title;
     public ?string $description;
-    public ?int $mediaId;
+    public ?int $coverMediaId;
     public ?int $categoryId;
+    public ?string $coverUrl;
+    public array $mediaIds;
 
     private function __construct(
         int $id,
         string $title,
         ?string $description,
-        ?int $mediaId,
-        ?int $categoryId
+        ?int $coverMediaId,
+        ?int $categoryId,
+        ?string $coverUrl,
+        array $mediaIds
     ) {
         $this->id = $id;
         $this->title = $title;
         $this->description = $description;
-        $this->mediaId = $mediaId;
+        $this->coverMediaId = $coverMediaId;
         $this->categoryId = $categoryId;
+        $this->coverUrl = $coverUrl;
+        $this->mediaIds = $mediaIds;
     }
 
     public static function fromEntity(Album $album): self
     {
+        $mediaIds = [];
+        foreach ($album->getAlbumMedia() as $albumMedia) {
+            $mediaIds[] = $albumMedia->getMedia()?->getId();
+        }
+        $mediaIds = array_values(array_filter($mediaIds));
+
         return new self(
             id: $album->getId(),
             title: $album->getTitle(),
             description: $album->getDescription(),
-            mediaId: $album->getMedia()?->getId(),
-            categoryId: $album->getCategory()?->getId()
+            coverMediaId: $album->getMedia()?->getId(),
+            categoryId: $album->getCategory()?->getId(),
+            coverUrl: $album->getCoverUrl(),
+            mediaIds: $mediaIds
         );
     }
 
@@ -43,24 +57,10 @@ readonly class AlbumResponse
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'mediaId' => $this->mediaId,
+            'coverMediaId' => $this->coverMediaId,
             'categoryId' => $this->categoryId,
+            'coverUrl' => $this->coverUrl,
+            'mediaIds' => $this->mediaIds,
         ];
     }
-}
-
-class AlbumCreateRequest
-{
-    public string $title;
-    public ?string $description;
-    public int $mediaId;
-    public int $categoryId;
-}
-
-class AlbumUpdateRequest
-{
-    public ?string $title;
-    public ?string $description;
-    public ?int $mediaId;
-    public ?int $categoryId;
 }

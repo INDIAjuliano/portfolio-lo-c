@@ -26,23 +26,22 @@ class AuthController
     #[Route('/register', name: 'auth_register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
-        $json = $request->getContent();
-        $dto = $this->serializer->deserialize($json, RegisterRequest::class, 'json');
+        $data = json_decode($request->getContent(), true);
 
-        if (empty($dto->email) || empty($dto->password)) {
+        if (empty($data['email']) || empty($data['password'])) {
             return new JsonResponse(['error' => 'Email and password are required'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $dto->email]);
+        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $data['email']]);
         if ($existing) {
             return new JsonResponse(['error' => 'User already exists'], JsonResponse::HTTP_CONFLICT);
         }
 
         $user = new User();
-        $user->setEmail($dto->email);
-        $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
-        if ($dto->firstName !== null) $user->setFirstName($dto->firstName);
-        if ($dto->lastName !== null) $user->setLastName($dto->lastName);
+        $user->setEmail($data['email']);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $data['password']));
+        if (!empty($data['firstName'])) $user->setFirstName($data['firstName']);
+        if (!empty($data['lastName'])) $user->setLastName($data['lastName']);
         $user->setRoles(['ROLE_USER']);
 
         $this->em->persist($user);
@@ -70,6 +69,8 @@ class AuthController
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'roles' => $user->getRoles(),
+            'subscriptionType' => $user->getSubscriptionType(),
+            'isPremium' => $user->isPremiumUser(),
         ], JsonResponse::HTTP_OK);
     }
 }

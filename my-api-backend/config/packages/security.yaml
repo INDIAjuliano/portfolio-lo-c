@@ -10,7 +10,7 @@ security:
 
     firewalls:
         dev:
-            pattern: ^/(_profiler|_wdt|assets|build)/
+            pattern: ^/(_profiler|_wdt|assets|build|uploads)/
             security: false
 
         login:
@@ -34,10 +34,17 @@ security:
             jwt: ~
             provider: app_user_provider
 
+        public_api:
+            pattern: ^/api/public/
+            stateless: true
+            security: false
+
     access_control:
         - { path: ^/api/auth/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/auth/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/auth/me, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/themes, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/subscription, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/users, roles: ROLE_ADMIN }
         - { path: ^/api/categories, roles: ROLE_ADMIN }
         - { path: ^/api/albums, roles: ROLE_ADMIN }

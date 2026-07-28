@@ -17,6 +17,9 @@ readonly class UserResponse
     public ?string $twitter;
     public bool $isActive;
     public array $roles;
+    public string $subscriptionType;
+    public bool $isPremium;
+    public ?\DateTimeImmutable $subscriptionExpiresAt;
     public ?\DateTimeImmutable $createdAt;
     public ?\DateTimeImmutable $updatedAt;
 
@@ -32,6 +35,9 @@ readonly class UserResponse
         ?string $twitter,
         bool $isActive,
         array $roles,
+        string $subscriptionType,
+        bool $isPremium,
+        ?\DateTimeImmutable $subscriptionExpiresAt,
         ?\DateTimeImmutable $createdAt,
         ?\DateTimeImmutable $updatedAt
     ) {
@@ -46,6 +52,9 @@ readonly class UserResponse
         $this->twitter = $twitter;
         $this->isActive = $isActive;
         $this->roles = $roles;
+        $this->subscriptionType = $subscriptionType;
+        $this->isPremium = $isPremium;
+        $this->subscriptionExpiresAt = $subscriptionExpiresAt;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
     }
@@ -64,6 +73,9 @@ readonly class UserResponse
             twitter: $user->getTwitter(),
             isActive: $user->isActive(),
             roles: $user->getRoles(),
+            subscriptionType: $user->getSubscriptionType(),
+            isPremium: $user->isPremiumUser(),
+            subscriptionExpiresAt: $user->getSubscriptionExpiresAt(),
             createdAt: $user->getCreatedAt(),
             updatedAt: $user->getUpdatedAt()
         );
@@ -83,6 +95,9 @@ readonly class UserResponse
             'twitter' => $this->twitter,
             'isActive' => $this->isActive,
             'roles' => $this->roles,
+            'subscriptionType' => $this->subscriptionType,
+            'isPremium' => $this->isPremium,
+            'subscriptionExpiresAt' => $this->subscriptionExpiresAt?->format('Y-m-d\TH:i:s'),
             'createdAt' => $this->createdAt ? $this->createdAt->format('Y-m-d\TH:i:s') : null,
             'updatedAt' => $this->updatedAt ? $this->updatedAt->format('Y-m-d\TH:i:s') : null,
         ];

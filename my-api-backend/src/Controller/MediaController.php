@@ -4,11 +4,14 @@ namespace App\Controller;
 
 use App\Dto\MediaResponse;
 use App\Entity\Medias;
+use App\Entity\User;
 use App\Repository\MediasRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/media', name: 'api_media_')]
@@ -17,27 +20,44 @@ class MediaController
     public function __construct(
         private EntityManagerInterface $em,
         private MediasRepository $repository,
-        private SerializerInterface $serializer
+        private SerializerInterface $serializer,
+        private TokenStorageInterface $tokenStorage
     ) {}
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
-        $type = $request->query->get('type');
-        $media = $type !== null ? $this->repository->findPublished($type) : $this->repository->findPublished();
+        $user = $this->tokenStorage->getToken()?->getUser();
+        $isAdmin = $user instanceof User && in_array('ROLE_ADMIN', $user->getRoles(), true);
+
+        if ($isAdmin) {
+            $media = $this->repository->findAll();
+        } else {
+            $type = $request->query->get('type');
+            $media = $type !== null ? $this->repository->findPublished($type) : $this->repository->findPublished();
+        }
+
         $data = array_map(static fn (Medias $m) => MediaResponse::fromEntity($m)->toArray(), $media);
 
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?: [];
 
+        $slug = $data['slug'] ?? '';
+        if ($slug === '') {
+            $slug = $this->generateUniqueSlug($data['title'] ?? 'media');
+        } else {
+            $slug = $this->generateUniqueSlug($slug);
+        }
+
         $media = new Medias();
         $media->setTitle($data['title'] ?? '');
-        $media->setSlug($data['slug'] ?? '');
+        $media->setSlug($slug);
         $media->setDescription($data['description'] ?? null);
         $media->setType($data['type'] ?? '');
         $media->setImageUrl($data['imageUrl'] ?? null);
@@ -67,12 +87,35 @@ class MediaController
         return new JsonResponse(MediaResponse::fromEntity($media)->toArray(), JsonResponse::HTTP_CREATED);
     }
 
+    private function generateUniqueSlug(string $base): string
+    {
+        $slug = strtolower(trim($base));
+        $slug = preg_replace('/[^a-z0-9]+/i', '-', $slug) ?: 'media';
+        $slug = trim($slug, '-');
+
+        $originalSlug = $slug;
+        $counter = 1;
+        while ($this->repository->findOneBy(['slug' => $slug])) {
+            $slug = $originalSlug . '-' . $counter;
+            ++$counter;
+        }
+
+        return $slug;
+    }
+
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(int $id): JsonResponse
     {
         $media = $this->repository->find($id);
 
-        if ($media === null || !$media->isPublished()) {
+        if ($media === null) {
+            return new JsonResponse(['error' => 'Media not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $user = $this->tokenStorage->getToken()?->getUser();
+        $isAdmin = $user instanceof User && in_array('ROLE_ADMIN', $user->getRoles(), true);
+
+        if (!$media->isPublished() && !$isAdmin) {
             return new JsonResponse(['error' => 'Media not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
@@ -80,6 +123,7 @@ class MediaController
     }
 
     #[Route('/{id}', name: 'update', methods: ['PUT'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function update(int $id, Request $request): JsonResponse
     {
         $media = $this->repository->find($id);
@@ -120,6 +164,7 @@ class MediaController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
     {
         $media = $this->repository->find($id);
