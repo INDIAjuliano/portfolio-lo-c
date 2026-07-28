@@ -31,6 +31,9 @@ readonly class MediaResponse
     public bool $isFeatured;
     public int $views;
     public int $likes;
+    public ?int $albumId;
+    public ?string $albumName;
+    public array $albums;
 
     private function __construct(
         int $id,
@@ -57,7 +60,10 @@ readonly class MediaResponse
         bool $isPublished,
         bool $isFeatured,
         int $views,
-        int $likes
+        int $likes,
+        ?int $albumId,
+        ?string $albumName,
+        array $albums
     ) {
         $this->id = $id;
         $this->title = $title;
@@ -84,10 +90,26 @@ readonly class MediaResponse
         $this->isFeatured = $isFeatured;
         $this->views = $views;
         $this->likes = $likes;
+        $this->albumId = $albumId;
+        $this->albumName = $albumName;
+        $this->albums = $albums;
     }
 
     public static function fromEntity(Medias $media): self
     {
+        $albumId = null;
+        $albumName = null;
+        $albums = [];
+        foreach ($media->getAlbumMedia() as $albumMedia) {
+            $album = $albumMedia->getAlbum();
+            if (!$album) continue;
+            $albums[] = ['id' => $album->getId(), 'name' => $album->getTitle()];
+            if ($albumId === null) {
+                $albumId = $album->getId();
+                $albumName = $album->getTitle();
+            }
+        }
+
         return new self(
             id: $media->getId(),
             title: $media->getTitle(),
@@ -113,7 +135,10 @@ readonly class MediaResponse
             isPublished: $media->isPublished(),
             isFeatured: $media->isFeatured(),
             views: $media->getViews(),
-            likes: $media->getLikes()
+            likes: $media->getLikes(),
+            albumId: $albumId,
+            albumName: $albumName,
+            albums: $albums
         );
     }
 
@@ -145,6 +170,9 @@ readonly class MediaResponse
             'isFeatured' => $this->isFeatured,
             'views' => $this->views,
             'likes' => $this->likes,
+            'albumId' => $this->albumId,
+            'albumName' => $this->albumName,
+            'albums' => $this->albums,
         ];
     }
 }

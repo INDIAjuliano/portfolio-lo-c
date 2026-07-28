@@ -88,12 +88,13 @@ class Medias
     #[ORM\Column]
     private int $likes = 0;
 
-    #[ORM\OneToMany(mappedBy: 'media', targetEntity: Album::class, cascade: ['persist', 'remove'])]
-    private Collection $albums;
+    #[ORM\OneToMany(mappedBy: 'media', targetEntity: AlbumMedia::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $albumMedia;
 
     public function __construct()
     {
         $this->albums = new ArrayCollection();
+        $this->albumMedia = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -385,6 +386,35 @@ class Medias
     public function setLikes(int $likes): static
     {
         $this->likes = $likes;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AlbumMedia>
+     */
+    public function getAlbumMedia(): Collection
+    {
+        return $this->albumMedia;
+    }
+
+    public function addAlbumMedia(AlbumMedia $albumMedia): static
+    {
+        if (!$this->albumMedia->contains($albumMedia)) {
+            $this->albumMedia->add($albumMedia);
+            $albumMedia->setMedia($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAlbumMedia(AlbumMedia $albumMedia): static
+    {
+        if ($this->albumMedia->removeElement($albumMedia)) {
+            if ($albumMedia->getMedia() === $this) {
+                $albumMedia->setMedia(null);
+            }
+        }
 
         return $this;
     }

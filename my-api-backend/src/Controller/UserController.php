@@ -7,11 +7,13 @@ use App\Dto\UserResponse;
 use App\Dto\UserUpdateRequest;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\SubscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/users', name: 'api_users_')]
@@ -21,7 +23,8 @@ class UserController
         private EntityManagerInterface $em,
         private UserRepository $repository,
         private UserPasswordHasherInterface $passwordHasher,
-        private SerializerInterface $serializer
+        private SerializerInterface $serializer,
+        private SubscriptionService $subscriptionService
     ) {}
 
     #[Route('', name: 'list', methods: ['GET'])]
@@ -107,5 +110,39 @@ class UserController
         $this->em->flush();
 
         return new JsonResponse(['message' => 'User deleted'], JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{id}/upgrade-premium', name: 'upgrade_premium', methods: ['PUT'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function upgradeToPremium(int $id): JsonResponse
+    {
+        $user = $this->repository->find($id);
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $this->subscriptionService->upgradeToPremium($user);
+
+        return new JsonResponse([
+            'message' => 'User upgraded to premium successfully',
+            'user' => UserResponse::fromEntity($user)->toArray(),
+        ], JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/{id}/downgrade-free', name: 'downgrade_free', methods: ['PUT'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function downgradeToFree(int $id): JsonResponse
+    {
+        $user = $this->repository->find($id);
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $this->subscriptionService->downgradeToFree($user);
+
+        return new JsonResponse([
+            'message' => 'User downgraded to free successfully',
+            'user' => UserResponse::fromEntity($user)->toArray(),
+        ], JsonResponse::HTTP_OK);
     }
 }
