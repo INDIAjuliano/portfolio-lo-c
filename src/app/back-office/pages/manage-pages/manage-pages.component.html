@@ -1,0 +1,377 @@
+<div class="mp-app">
+
+  <main class="mp-main">
+    <div class="mp-container">
+
+      <div class="mp-content">
+
+        <div class="mp-page-header">
+          <div>
+            <h2>Gestion des pages</h2>
+            <p>Assignez des albums aux pages et sections du front-office pour les carrousels et galeries.</p>
+          </div>
+        </div>
+
+        <div class="mp-sub-filters">
+          @for (page of pages; track page.value) {
+            <button class="mp-sub-filter" [class.active]="selectedPage === page.value" (click)="selectedPage = page.value">
+              {{ page.label }}
+            </button>
+          }
+        </div>
+
+        <div class="mp-sections">
+          @for (section of sections[selectedPage]; track section.value) {
+            <section class="mp-section-card">
+              <div class="mp-section-header">
+                <div class="mp-section-header-left">
+                  <h3>{{ section.label }}</h3>
+                  <span class="mp-badge-label">{{ section.value }}</span>
+                </div>
+                <div class="mp-section-actions">
+                  <div class="mp-view-toggle">
+                    <button class="mp-view-btn" title="Grille"><span class="material-symbols-outlined">grid_view</span></button>
+                    <button class="mp-view-btn" title="Liste"><span class="material-symbols-outlined">list</span></button>
+                    <button class="mp-view-btn active" title="Carrousel"><span class="material-symbols-outlined">view_carousel</span></button>
+                  </div>
+                  <button class="mp-btn-add" (click)="openCreateModal(selectedPage, section.value)">
+                    <span class="material-symbols-outlined">add</span>
+                    Ajouter un album
+                  </button>
+                </div>
+              </div>
+
+              @let pageAlbums = getPageSectionAlbums(selectedPage, section.value);
+              @if (pageAlbums.length === 0) {
+                <div class="mp-empty-state">
+                  <div class="mp-icon-circle">
+                    <span class="material-symbols-outlined">photo_library</span>
+                  </div>
+                  <p>Aucun album assigné à cette section pour l'instant.</p>
+                  <a href="#" class="mp-link" (click)="openCreateModal(selectedPage, section.value); $event.preventDefault();">Sélectionner depuis la médiathèque</a>
+                </div>
+              } @else {
+                <div class="mp-album-grid">
+                  @for (album of pageAlbums; track album.id) {
+                    <div class="mp-album-card" (click)="selectAlbum(album)" [class.selected]="selectedAlbum?.id === album.id">
+                      <div class="mp-album-thumb">
+                        <img [src]="album.cover" [alt]="album.name" loading="lazy">
+                        <div class="mp-album-overlay">
+                          <span class="material-symbols-outlined">visibility</span>
+                        </div>
+                      </div>
+                      <div class="mp-album-info">
+                        <div>
+                          <h4>{{ album.name }}</h4>
+                          <p>{{ album.photosCount }} photo{{ album.photosCount > 1 ? 's' : '' }}</p>
+                        </div>
+                        <span class="mp-album-tag hero">Hero</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (isAlbumDetailVisible(selectedPage, section.value)) {
+                <div class="mp-album-detail">
+                  <div class="mp-album-detail-header">
+                    <div class="mp-album-detail-title">
+                      <h4>{{ selectedAlbumName }}</h4>
+                      <span class="mp-album-detail-meta">{{ selectedAlbumPhotosCount }} photo{{ selectedAlbumPhotosCount > 1 ? 's' : '' }}</span>
+                    </div>
+                    <div class="mp-album-detail-actions">
+                      <button class="mp-btn-add" (click)="openCreateImageModal()">
+                        <span class="material-symbols-outlined">add</span>
+                        Ajouter une image
+                      </button>
+                      <button class="mp-btn-add" (click)="closeAlbumDetail()">
+                        <span class="material-symbols-outlined">close</span>
+                        Fermer
+                      </button>
+                    </div>
+                  </div>
+
+                  @if (albumImages.length === 0) {
+                    <div class="mp-empty-state">
+                      <div class="mp-icon-circle">
+                        <span class="material-symbols-outlined">photo_library</span>
+                      </div>
+                      <p>Aucune image dans cet album</p>
+                    </div>
+                  } @else {
+                    <div class="mp-images-grid">
+                      @for (image of albumImages; track image.id) {
+                        <div class="mp-image-card">
+                          <div class="mp-image-thumb">
+                            <img [src]="image.imageUrl || image.thumbnailUrl" [alt]="image.title" loading="lazy">
+                          </div>
+                          <div class="mp-image-info">
+                            <p class="mp-image-title">{{ image.title }}</p>
+                            <span class="mp-image-type">{{ image.type }}</span>
+                          </div>
+                          <div class="mp-image-actions">
+                            <button class="mp-icon-btn" (click)="openEditImageModal(image)" title="Edit">
+                              <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <button class="mp-icon-btn danger" (click)="deleteImage(image)" title="Delete">
+                              <span class="material-symbols-outlined">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+@if (showAddModal) {
+  <div class="mp-modal-overlay" (click)="closeModal()">
+    <div class="mp-modal-container" (click)="$event.stopPropagation()">
+      <div class="mp-modal-header">
+        <h3 class="mp-modal-title">{{ editingAlbumId ? 'Modifier l\'album' : 'Nouvel album' }}</h3>
+        <button class="mp-modal-close" (click)="closeModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="mp-modal-body">
+        <div class="mp-form-group">
+          <label for="albumTitle">Titre *</label>
+          <input
+            type="text"
+            id="albumTitle"
+            [(ngModel)]="newAlbum.title"
+            placeholder="Titre de l'album"
+            [disabled]="isSubmitting"
+          />
+        </div>
+        <div class="mp-form-group">
+          <label>Source de la couverture</label>
+          <div class="mp-radio-group">
+            <label class="mp-radio-label">
+              <input type="radio" name="coverSource" value="url" [(ngModel)]="coverSource" [disabled]="isSubmitting">
+              <span>URL image</span>
+            </label>
+            <label class="mp-radio-label">
+              <input type="radio" name="coverSource" value="file" [(ngModel)]="coverSource" [disabled]="isSubmitting">
+              <span>Cover image</span>
+            </label>
+          </div>
+        </div>
+        @if (coverSource === 'url') {
+          <div class="mp-form-group">
+            <label for="albumCoverUrl">Cover URL</label>
+            <input
+              type="text"
+              id="albumCoverUrl"
+              [(ngModel)]="newAlbum.coverUrl"
+              placeholder="https://example.com/cover.jpg"
+              [disabled]="isSubmitting"
+            />
+            @if (newAlbum.coverUrl) {
+              <div class="mp-cover-preview">
+                <img [src]="newAlbum.coverUrl" alt="Cover preview">
+                <button type="button" class="mp-cover-remove" (click)="newAlbum.coverUrl = '';">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="mp-form-group">
+            <label>Cover image</label>
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onCoverFileSelected($event)"
+              [disabled]="isSubmitting"
+            />
+            @if (coverPreview) {
+              <div class="mp-cover-preview">
+                <img [src]="coverPreview" alt="Cover preview">
+                <button type="button" class="mp-cover-remove" (click)="coverPreview = null; newAlbum.coverUrl = ''; coverFile = null;">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+        <div class="mp-form-group">
+          <label for="albumCategory">Catégorie *</label>
+          <select
+            id="albumCategory"
+            [(ngModel)]="newAlbum.categoryId"
+            [disabled]="isSubmitting || categories.length === 0"
+          >
+            @if (categories.length === 0) {
+              <option value="">Chargement des catégories...</option>
+            } @else {
+              @for (cat of categories; track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            }
+          </select>
+        </div>
+        <div class="mp-form-group">
+          <label>Médias de l'album</label>
+          <select
+            multiple
+            [(ngModel)]="newAlbum.mediaIds"
+            [disabled]="isSubmitting || mediaItems.length === 0"
+          >
+            @if (mediaItems.length === 0) {
+              <option value="">Chargement des médias...</option>
+            } @else {
+              @for (media of mediaItems; track media.id) {
+                <option [value]="media.id">{{ media.title }} ({{ media.type }})</option>
+              }
+            }
+          </select>
+          <small class="mp-form-hint">Maintenez Ctrl/Cmd pour sélectionner plusieurs médias</small>
+        </div>
+        <div class="mp-form-group">
+          <label for="albumDescription">Description</label>
+          <textarea
+            id="albumDescription"
+            [(ngModel)]="newAlbum.description"
+            rows="3"
+            placeholder="Description de l'album..."
+            [disabled]="isSubmitting"
+          ></textarea>
+        </div>
+      </div>
+      <div class="mp-modal-footer">
+        <button class="mp-modal-btn cancel" (click)="closeModal()" [disabled]="isSubmitting">Annuler</button>
+        <button class="mp-modal-btn validate" (click)="submitAlbum()" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            {{ editingAlbumId ? 'Modification...' : 'Création...' }}
+          } @else {
+            {{ editingAlbumId ? 'Modifier' : 'Créer l\'album' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showImageModal) {
+  <div class="mp-modal-overlay" (click)="closeImageModal()">
+    <div class="mp-modal-container" (click)="$event.stopPropagation()">
+      <div class="mp-modal-header">
+        <h3 class="mp-modal-title">{{ isEditingImage ? 'Modifier l\'image' : 'Nouvelle image' }}</h3>
+        <button class="mp-modal-close" (click)="closeImageModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="mp-modal-body">
+        <div class="mp-form-group">
+          <label for="imageTitle">Titre *</label>
+          <input
+            type="text"
+            id="imageTitle"
+            [(ngModel)]="imageForm.title"
+            placeholder="Titre de l'image"
+            [disabled]="isSubmitting"
+          />
+        </div>
+        <div class="mp-form-group">
+          <label>Type *</label>
+          <select
+            [(ngModel)]="imageForm.type"
+            [disabled]="isSubmitting"
+          >
+            <option value="image">Image</option>
+            <option value="video">Vidéo</option>
+          </select>
+        </div>
+        <div class="mp-form-group">
+          <label>Source</label>
+          <div class="mp-radio-group">
+            <label class="mp-radio-label">
+              <input type="radio" name="imageSource" value="url" [(ngModel)]="imageSource" [disabled]="isSubmitting">
+              <span>URL</span>
+            </label>
+            <label class="mp-radio-label">
+              <input type="radio" name="imageSource" value="file" [(ngModel)]="imageSource" [disabled]="isSubmitting">
+              <span>Fichier</span>
+            </label>
+          </div>
+        </div>
+        @if (imageSource === 'url') {
+          <div class="mp-form-group">
+            <label for="imageUrl">URL {{ imageForm.type === 'video' ? 'vidéo' : 'image' }}</label>
+            <input
+              type="text"
+              id="imageUrl"
+              [(ngModel)]="imageForm.imageUrl"
+              placeholder="https://example.com/image.jpg"
+              [disabled]="isSubmitting"
+            />
+          </div>
+        } @else {
+          <div class="mp-form-group">
+            <label>Fichier</label>
+            <input
+              type="file"
+              [accept]="imageForm.type === 'video' ? 'video/*' : 'image/*'"
+              (change)="onImageFilesSelected($event)"
+              [disabled]="isSubmitting"
+            />
+            @for (preview of imagePreviews; track $index) {
+              <div class="mp-cover-preview">
+                <img [src]="preview" alt="Preview">
+              </div>
+            }
+          </div>
+        }
+        <div class="mp-form-group">
+          <label for="imageDescription">Description</label>
+          <textarea
+            id="imageDescription"
+            [(ngModel)]="imageForm.description"
+            rows="3"
+            placeholder="Description..."
+            [disabled]="isSubmitting"
+          ></textarea>
+        </div>
+        <div class="mp-form-group">
+          <label for="imageTags">Tags</label>
+          <input
+            type="text"
+            id="imageTags"
+            [(ngModel)]="tagsInput"
+            placeholder="nature, portrait, voyage..."
+            [disabled]="isSubmitting"
+          />
+          <small class="mp-form-hint">Séparez les tags par des virgules</small>
+        </div>
+        <div class="mp-form-group">
+          <label class="mp-radio-label">
+            <input type="checkbox" [(ngModel)]="imageForm.isPublished" [disabled]="isSubmitting">
+            <span>Publié</span>
+          </label>
+          <label class="mp-radio-label">
+            <input type="checkbox" [(ngModel)]="imageForm.isFeatured" [disabled]="isSubmitting">
+            <span>Mis en avant</span>
+          </label>
+        </div>
+      </div>
+      <div class="mp-modal-footer">
+        <button class="mp-modal-btn cancel" (click)="closeImageModal()" [disabled]="isSubmitting">Annuler</button>
+        <button class="mp-modal-btn validate" (click)="submitImageForm()" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            {{ isEditingImage ? 'Modification...' : 'Création...' }}
+          } @else {
+            {{ isEditingImage ? 'Modifier' : 'Ajouter l\'image' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

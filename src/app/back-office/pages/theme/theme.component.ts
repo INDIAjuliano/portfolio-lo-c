@@ -162,6 +162,7 @@ export class ThemeComponent implements OnInit, OnDestroy {
     previewImage: '',
     isActive: true
   };
+  managePagesTabActive = false;
 
   constructor(
     private themeService: ThemeService,

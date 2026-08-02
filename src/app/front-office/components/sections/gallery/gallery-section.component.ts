@@ -2,6 +2,12 @@ import { Component, AfterViewInit, ViewChild, ElementRef, HostListener, OnDestro
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 import { IconComponent } from '../../icon/icon.component';
+import { ApiService } from '../../../../core/services/api.service';
+import { environment } from '../../../../../environments/environment';
+import { HeroGalleryComponent } from './hero-gallery.component';
+import { ScrollInfiniteDirective } from '../../../../shared/directives/scroll-infinite.directive';
+
+const PAGE_SIZE = 20;
 
 interface GalleryItem {
   id: number;
@@ -11,154 +17,34 @@ interface GalleryItem {
   large: string;
   size: string;
   video?: string;
+  width?: number;
+  height?: number;
 }
 
 @Component({
   selector: 'app-gallery-section',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, IconComponent, HeroGalleryComponent, ScrollInfiniteDirective],
   templateUrl: './gallery-section.component.html',
   styleUrls: ['./gallery-section.component.css']
 })
 export class GallerySectionComponent implements AfterViewInit, OnDestroy {
   @ViewChild('galleryGrid') galleryGrid!: ElementRef<HTMLDivElement>;
 
-  galleryData: GalleryItem[] = [
-    {
-      id: 1,
-      title: "Portrait d'Artiste",
-      category: 'portrait',
-      image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 2,
-      title: 'Lueur Matinale',
-      category: 'landscape',
-      image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'large'
-    },
-    {
-      id: 3,
-      title: 'Scène Cinématique',
-      category: 'cinematic',
-      image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 4,
-      title: 'Délice Culinaire',
-      category: 'culinary',
-      image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 5,
-      title: 'Modernité Architecturale',
-      category: 'realestate',
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'tall'
-    },
-    {
-      id: 6,
-      title: 'Portrait Urbain',
-      category: 'portrait',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 7,
-      title: 'Sommet Enneigé',
-      category: 'landscape',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'wide'
-    },
-    {
-      id: 8,
-      title: "Événement d'Entreprise",
-      category: 'corporate',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 9,
-      title: 'Mariage Intime',
-      category: 'events',
-      image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 10,
-      title: 'Couleurs de la Nature',
-      category: 'landscape',
-      image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'large'
-    },
-    {
-      id: 11,
-      title: 'Ambiance Cinématique',
-      category: 'cinematic',
-      image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 12,
-      title: 'Art Culinaire',
-      category: 'culinary',
-      image: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 13,
-      title: 'Célébration',
-      category: 'events',
-      image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'tall'
-    },
-    {
-      id: 14,
-      title: 'Lumières de la Ville',
-      category: 'realestate',
-      image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'wide'
-    },
-    {
-      id: 15,
-      title: 'Élégance Corporate',
-      category: 'corporate',
-      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    },
-    {
-      id: 16,
-      title: 'Rêverie',
-      category: 'portrait',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=800&h=800&q=80',
-      large: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=1200&h=1200&q=80',
-      size: 'normal'
-    }
-  ];
-
+  galleryData: GalleryItem[] = [];
+  categories: string[] = [];
   currentFilter = 'all';
   lightboxOpen = false;
   currentGalleryIndex = 0;
   currentFilteredItems: GalleryItem[] = [];
   isFullscreen = false;
+  isLoading = true;
+  hasMore = true;
+  currentPage = 1;
+  isLoadingMore = false;
+  allGalleryData: GalleryItem[] = [];
+
+  constructor(private apiService: ApiService) {}
 
   getFilteredItems(): GalleryItem[] {
     return this.currentFilter === 'all'
@@ -170,9 +56,13 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     return this.currentFilteredItems[this.currentGalleryIndex];
   }
 
+  getItemLayoutClass(item: GalleryItem, index: number): string {
+    return '';
+  }
+
   ngAfterViewInit(): void {
     if (typeof document === 'undefined') return;
-    setTimeout(() => this.animateGalleryItems(), 50);
+    this.loadGallery();
   }
 
   ngOnDestroy(): void {
@@ -182,6 +72,91 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     if (typeof window !== 'undefined') {
       window.removeEventListener('resize', this.onHorizontalResize);
     }
+  }
+
+  loadGallery(): void {
+    this.isLoading = true;
+    this.currentPage = 1;
+    this.hasMore = true;
+    this.allGalleryData = [];
+    this.galleryData = [];
+
+    this.apiService.getPublicMediaPage(1, PAGE_SIZE).subscribe({
+      next: (media: any[]) => {
+        const mapped = media.map((m: any) => this.mapGalleryItem(m));
+        this.allGalleryData = mapped;
+        this.galleryData = mapped;
+        this.categories = Array.from(new Set(this.galleryData.map(item => item.category))).sort();
+        this.hasMore = media.length >= PAGE_SIZE;
+        this.isLoading = false;
+        this.currentPage = 2;
+        setTimeout(() => this.animateGalleryItems(), 50);
+      },
+      error: (err) => {
+        console.error('Failed to load gallery', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadMoreGallery(): void {
+    if (this.isLoadingMore || !this.hasMore) return;
+
+    this.isLoadingMore = true;
+    this.apiService.getPublicMediaPage(this.currentPage, PAGE_SIZE).subscribe({
+      next: (media: any[]) => {
+        const mapped = media.map((m: any) => this.mapGalleryItem(m));
+        this.allGalleryData = [...this.allGalleryData, ...mapped];
+        this.galleryData = this.applyFilter(this.allGalleryData);
+        this.hasMore = media.length >= PAGE_SIZE;
+        this.currentPage++;
+        this.isLoadingMore = false;
+      },
+      error: (err) => {
+        console.error('Failed to load more gallery', err);
+        this.isLoadingMore = false;
+        this.hasMore = false;
+      }
+    });
+  }
+
+  private mapGalleryItem(m: any): GalleryItem {
+    const category = m.category || (m.albumName ? this.slugify(m.albumName) : 'autre');
+    const imageUrl = this.getAbsoluteUrl(m.thumbnailUrl || m.imageUrl || '');
+    const largeUrl = this.getAbsoluteUrl(m.imageUrl || m.thumbnailUrl || '');
+    const width = m.width || m.imageWidth || 0;
+    const height = m.height || m.imageHeight || 0;
+    return {
+      id: m.id,
+      title: m.title || 'Sans titre',
+      category,
+      image: imageUrl,
+      large: largeUrl,
+      size: 'normal',
+      video: m.type === 'video' ? this.getAbsoluteUrl(m.videoUrl || m.embedUrl || '') : undefined,
+      width,
+      height
+    };
+  }
+
+  private applyFilter(items: GalleryItem[]): GalleryItem[] {
+    return this.currentFilter === 'all' ? items : items.filter(item => item.category === this.currentFilter);
+  }
+
+  private getAbsoluteUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('//')) return 'https:' + url;
+    if (url.startsWith('/')) return environment.apiUrl.replace('/api', '') + url;
+    return environment.apiUrl.replace('/api', '') + '/' + url;
+  }
+
+  private slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/[\s_]+/g, '-');
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -199,10 +174,11 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
   setFilter(filter: string): void {
     this.currentFilter = filter;
     this.lightboxOpen = false;
-    setTimeout(() => {
-      this.animateGalleryItems();
-      this.refreshHorizontalGallery();
-    }, 50);
+    this.loadGallery();
+  }
+
+  onScrollReached(): void {
+    this.loadMoreGallery();
   }
 
   openLightbox(index: number): void {
@@ -247,7 +223,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
   }
 
   private animateGalleryItems(): void {
-    const items = this.galleryGrid.nativeElement.querySelectorAll('.gallery-item');
+    const items = document.querySelectorAll('.pexels-item');
     if (!items.length) return;
     items.forEach((item, i: number) => {
       const el = item as HTMLElement;

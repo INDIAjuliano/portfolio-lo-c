@@ -201,6 +201,10 @@ export class BackOfficeLayoutComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  showSiteInfo(): void {
+    alert('Portfolio Admin - Version 1.0\nDéveloppé avec Angular & Symfony');
+  }
+
   private detectBrowserLang(): void {
     if (typeof navigator === 'undefined') return;
     const browserLang = navigator.language?.slice(0, 2).toLowerCase() || 'fr';

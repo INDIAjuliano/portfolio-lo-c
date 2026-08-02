@@ -37,6 +37,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
 
   constructor(private themeService: ThemeService) {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const forceHero = url.searchParams.get('hero');
+      if (forceHero === '2') {
+        this.themeService.setHeroVariant('hero2');
+      } else if (forceHero === '1') {
+        this.themeService.setHeroVariant('hero1');
+      }
+    }
     const variant = this.themeService.getCurrentHeroVariant();
     this.showHero = variant === 'hero1';
     this.showHero2 = variant === 'hero2';

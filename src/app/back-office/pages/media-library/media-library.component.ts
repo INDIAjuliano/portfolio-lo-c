@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { forkJoin, map, Observable, switchMap, of, catchError } from 'rxjs';
-import { IconComponent } from '../../../front-office/components/icon/icon.component';
 import { ApiService, AlbumCreateRequest, Category, MediaItem } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
+import { ManagePagesComponent } from '../manage-pages/manage-pages.component';
 
 interface MediaItemLocal {
   id?: number;
@@ -35,9 +35,43 @@ interface Album {
   coverUrl?: string;
   mediaIds: number[];
   categoryId?: number;
+  page?: string;
+  section?: string;
 }
 
 const DEFAULT_ALBUM_COVER = 'https://images.pexels.com/photos/10965788/pexels-photo-10965788.jpeg';
+
+export const CAROUSEL_PAGES = [
+  { value: 'home', label: 'Home' },
+  { value: 'gallery', label: 'Gallery' },
+  { value: 'portfolio', label: 'Portfolio' },
+  { value: 'about', label: 'About' },
+  { value: 'contact', label: 'Contact' }
+] as const;
+
+export const CAROUSEL_SECTIONS: Record<string, { value: string; label: string }[]> = {
+  home: [
+    { value: 'hero', label: 'Hero' },
+    { value: 'hero2', label: 'Hero 2' },
+    { value: 'gallery', label: 'Gallery section' },
+    { value: 'portfolio', label: 'Portfolio section' },
+    { value: 'about', label: 'About section' },
+    { value: 'passion', label: 'Passion' },
+    { value: 'offer', label: 'Offer' }
+  ],
+  gallery: [
+    { value: 'main', label: 'Main gallery' }
+  ],
+  portfolio: [
+    { value: 'main', label: 'Main portfolio' }
+  ],
+  about: [
+    { value: 'main', label: 'Main about' }
+  ],
+  contact: [
+    { value: 'main', label: 'Main contact' }
+  ]
+};
 
 interface MediaFormData {
   title: string;
@@ -54,15 +88,15 @@ interface MediaFormData {
 @Component({
   selector: 'app-media-library',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, ManagePagesComponent],
   templateUrl: './media-library.component.html',
   styleUrl: './media-library.component.css'
 })
 export class MediaLibraryComponent implements OnInit, OnDestroy {
   images: MediaItemLocal[] = [];
   albums: Album[] = [];
-  categories: Category[] = [];
   mediaItems: MediaItem[] = [];
+  categories: Category[] = [];
   currentFilter = 'all';
   isDropdownOpen = false;
   isDark = false;
@@ -77,14 +111,19 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
 
   selectedMediaIds: Set<number> = new Set();
   isSelectionMode = false;
+  draggedMediaId: number | null = null;
+  dragOverMediaId: number | null = null;
+  managePagesTabActive = false;
 
   showAddModal = false;
-  newAlbum: AlbumCreateRequest = {
+  newAlbum: AlbumCreateRequest & { page?: string; section?: string } = {
     title: '',
     description: '',
     coverUrl: '',
     mediaIds: [],
-    categoryId: 0
+    categoryId: 0,
+    page: '',
+    section: ''
   };
   isSubmitting = false;
   editingAlbumId: number | null = null;
@@ -122,10 +161,14 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   previewMedia: { url: string; type: string; title: string } | null = null;
   previewIndex = -1;
 
+  showMediaActions = false;
+  selectedMedia: { id: number; title: string } | null = null;
+
   showToast = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
   private toastTimer: any = null;
+  toastProgress = 100;
 
   constructor(private apiService: ApiService, private router: Router, private route: ActivatedRoute, private authService: AuthService) {}
 
@@ -204,10 +247,13 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
           cover: a.coverUrl || a.coverMedia?.imageUrl || a.coverMedia?.videoUrl || DEFAULT_ALBUM_COVER,
           category: a.category?.name || 'Non classé',
           photosCount: (a.mediaIds || []).length,
-          status: a.coverMedia?.isPublished ? 'published' : 'draft',
+          status: a.isPublished ? 'published' : 'draft',
           description: a.description || '',
           coverUrl: a.coverUrl || '',
-          mediaIds: a.mediaIds || []
+          mediaIds: a.mediaIds || [],
+          categoryId: a.categoryId,
+          page: a.page || '',
+          section: a.section || ''
         }));
       },
       error: (err) => {
@@ -239,7 +285,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
       result = result.filter(img => img.albums.some(a => a.id === this.selectedAlbumId));
     }
     if (this.currentFilter !== 'all') {
-      result = result.filter(img => img.category === this.currentFilter);
+      result = result.filter(img => img.albumName === this.currentFilter);
     }
     if (this.selectedAlbumId !== null && this.albumMediaTypeFilter !== 'all') {
       result = result.filter(img => {
@@ -263,11 +309,11 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
 
   get filteredAlbums(): Album[] {
     if (this.currentFilter === 'all') return this.albums;
-    return this.albums.filter(album => album.category === this.currentFilter);
+    return this.albums.filter(album => album.name === this.currentFilter);
   }
 
-  get categoriesCount(): number {
-    return [...new Set(this.images.map(img => img.category))].length;
+  get albumsCount(): number {
+    return this.albums.length;
   }
 
   get pagedImages(): MediaItemLocal[] {
@@ -281,6 +327,19 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
 
   get selectedAlbum(): Album | undefined {
     return this.albums.find(album => album.id === this.selectedAlbumId);
+  }
+
+  getAlbumLocation(album: Album): string {
+    if (!album.page) return '';
+    return album.section ? `${album.page} / ${album.section}` : album.page;
+  }
+
+  carouselPages() {
+    return CAROUSEL_PAGES;
+  }
+
+  carouselSections(page: string) {
+    return CAROUSEL_SECTIONS[page] || [];
   }
 
   setFilter(filter: string): void {
@@ -315,6 +374,22 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     this.deleteConfirmType = 'media';
     this.deleteConfirmId = id;
     this.showDeleteConfirm = true;
+  }
+
+  togglePublishMedia(id: number): void {
+    const media = this.mediaItems.find(m => m.id === id);
+    if (!media) return;
+    const newStatus = !media.isPublished;
+    this.apiService.updateMedia(id, { isPublished: newStatus }).subscribe({
+      next: () => {
+        const item = this.images.find(img => img.id === id);
+        if (item) item.status = newStatus ? 'published' : 'draft';
+        const apiItem = this.mediaItems.find(m => m.id === id);
+        if (apiItem) apiItem.isPublished = newStatus;
+        this.showToastMessage(newStatus ? 'Média publié' : 'Média mis en brouillon', 'success');
+      },
+      error: () => this.showToastMessage('Erreur lors de la mise à jour du statut', 'error')
+    });
   }
 
   toggleMediaSelection(id: number): void {
@@ -431,14 +506,39 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     this.showDeleteConfirm = true;
   }
 
+  togglePublishAlbum(id: number | undefined): void {
+    if (id === undefined) return;
+    const album = this.albums.find(a => a.id === id);
+    if (!album) return;
+    const newStatus = album.status === 'published' ? 'draft' : 'published';
+    this.apiService.updateAlbum(id, { isPublished: newStatus === 'published' }).subscribe({
+      next: () => {
+        album.status = newStatus;
+        this.showToastMessage(newStatus === 'published' ? 'Album publié' : 'Album mis en brouillon', 'success');
+      },
+      error: () => this.showToastMessage('Erreur lors de la mise à jour du statut', 'error')
+    });
+  }
+
   showToastMessage(message: string, type: 'success' | 'error' = 'success'): void {
     this.toastMessage = message;
     this.toastType = type;
     this.showToast = true;
+    this.toastProgress = 100;
     if (this.toastTimer) clearTimeout(this.toastTimer);
+    const startTime = Date.now();
+    const duration = 1000;
+    const animateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      this.toastProgress = Math.max(0, 100 - (elapsed / duration) * 100);
+      if (elapsed < duration) {
+        requestAnimationFrame(animateProgress);
+      }
+    };
+    requestAnimationFrame(animateProgress);
     this.toastTimer = setTimeout(() => {
       this.showToast = false;
-    }, 3000);
+    }, duration);
   }
 
   toggleDropdown(): void {
@@ -456,7 +556,9 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
       description: '',
       coverUrl: '',
       mediaIds: [],
-      categoryId: this.categories.length > 0 ? this.categories[0].id : 0
+      categoryId: this.categories.length > 0 ? this.categories[0].id : 0,
+      page: '',
+      section: ''
     };
     this.coverSource = 'url';
     this.coverFile = null;
@@ -471,7 +573,9 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
       description: album.description || '',
       coverUrl: album.coverUrl || album.cover || '',
       mediaIds: album.mediaIds || [],
-      categoryId: album.categoryId || 0
+      categoryId: album.categoryId || 0,
+      page: album.page || '',
+      section: album.section || ''
     };
     this.coverFile = null;
     this.coverPreview = album.cover || null;
@@ -533,7 +637,9 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
       description: this.newAlbum.description || null,
       coverUrl: this.newAlbum.coverUrl || null,
       mediaIds: this.newAlbum.mediaIds || [],
-      categoryId: this.newAlbum.categoryId || null
+      categoryId: this.newAlbum.categoryId || null,
+      page: this.newAlbum.page || null,
+      section: this.newAlbum.section || null
     };
 
     if (this.editingAlbumId) {
@@ -547,7 +653,9 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
             description: payload.description || a.description || '',
             coverUrl: payload.coverUrl || a.coverUrl || '',
             mediaIds: payload.mediaIds || a.mediaIds || [],
-            categoryId: payload.categoryId ?? a.categoryId
+            categoryId: payload.categoryId ?? a.categoryId,
+            page: payload.page || a.page || '',
+            section: payload.section || a.section || ''
           } : a);
           this.closeAddModal();
           this.showToastMessage('Album modifié avec succès', 'success');
@@ -708,6 +816,71 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     this.showPreview = false;
     this.previewMedia = null;
     this.previewIndex = -1;
+  }
+
+  onGalleryItemClick(img: MediaItemLocal): void {
+    if (this.isSelectionMode && this.selectedMediaIds.has(img.id!)) {
+      this.openMediaActions(img);
+    }
+  }
+
+  onDragStart(id: number, event: DragEvent): void {
+    this.draggedMediaId = id;
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', String(id));
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDragEnter(targetId: number): void {
+    if (this.draggedMediaId !== null && this.draggedMediaId !== targetId) {
+      this.dragOverMediaId = targetId;
+    }
+  }
+
+  onDragLeave(): void {
+    this.dragOverMediaId = null;
+  }
+
+  onDrop(targetId: number): void {
+    this.dragOverMediaId = null;
+    if (this.draggedMediaId === null || this.draggedMediaId === targetId) {
+      this.draggedMediaId = null;
+      return;
+    }
+
+    const draggedIndex = this.images.findIndex(img => img.id === this.draggedMediaId);
+    const targetIndex = this.images.findIndex(img => img.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      this.draggedMediaId = null;
+      return;
+    }
+
+    const item = this.images[draggedIndex];
+    const updatedImages = [...this.images];
+    updatedImages.splice(draggedIndex, 1);
+    updatedImages.splice(targetIndex, 0, item);
+
+    this.images = updatedImages;
+    this.draggedMediaId = null;
+  }
+
+  openMediaActions(img: MediaItemLocal): void {
+    this.selectedMedia = { id: img.id!, title: img.title };
+    this.showMediaActions = true;
+  }
+
+  closeMediaActions(): void {
+    this.showMediaActions = false;
+    this.selectedMedia = null;
   }
 
   linkMediaToAlbum(mediaId: number): void {

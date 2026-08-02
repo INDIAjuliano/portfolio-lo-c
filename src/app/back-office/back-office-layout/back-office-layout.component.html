@@ -71,28 +71,25 @@
           <app-icon [name]="isDark ? 'light_mode' : 'dark_mode'" size="20"></app-icon>
           <span>{{ isDark ? 'Clair' : 'Sombre' }}</span>
         </button>
+        <button class="hamburger" [class.active]="isDropdownOpen" (click)="toggleDropdown(); $event.stopPropagation()" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <div class="user-menu" id="userMenu">
-          <button class="user-btn" id="userBtn" (click)="toggleDropdown()">
+          <button class="user-btn" id="userBtn" (click)="toggleDropdown(); $event.stopPropagation()">
             <div class="user-avatar-sm">{{ userInitials }}</div>
             <span class="user-name">{{ userName }}</span>
             <app-icon name="expand_more" size="18"></app-icon>
           </button>
-          <div class="user-dropdown" id="userDropdown" [class.open]="isDropdownOpen">
+          <div class="user-dropdown" id="userDropdown" [class.open]="isDropdownOpen" (click)="$event.stopPropagation()">
             <div class="dropdown-user-info">
               <div class="dropdown-name">{{ userName }}</div>
               <div class="dropdown-email">{{ userEmail }}</div>
             </div>
-            <button class="dropdown-item" data-action="profile">
-              <app-icon name="account_circle" size="20"></app-icon>
-              Mon profil
-            </button>
-            <button class="dropdown-item" data-action="settings">
-              <app-icon name="settings" size="20"></app-icon>
-              Paramètres
-            </button>
-            <button class="dropdown-item" data-action="help">
-              <app-icon name="help" size="20"></app-icon>
-              Aide
+            <button class="dropdown-item" data-action="help" (click)="showSiteInfo(); closeDropdown()">
+              <app-icon name="info" size="20"></app-icon>
+              Info du site
             </button>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item danger" (click)="logout()">

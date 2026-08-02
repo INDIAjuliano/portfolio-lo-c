@@ -96,6 +96,9 @@ export interface AlbumCreateRequest {
   coverUrl?: string | null;
   mediaIds: number[];
   categoryId: number;
+  isPublished?: boolean;
+  page?: string | null;
+  section?: string | null;
 }
 
 export interface AlbumUpdateRequest {
@@ -104,6 +107,9 @@ export interface AlbumUpdateRequest {
   coverUrl?: string | null;
   mediaIds?: number[];
   categoryId?: number;
+  isPublished?: boolean;
+  page?: string | null;
+  section?: string | null;
 }
 
 @Injectable({
@@ -216,6 +222,31 @@ export class ApiService {
 
   getPublicMedia(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/public/media`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPublicMediaPage(page: number, limit: number): Observable<any[]> {
+    const url = `${this.apiUrl}/public/media?page=${page}&limit=${limit}`;
+    return this.http.get<any[]>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPublishedAlbums(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPublishedAlbumsByPage(page: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published?page=${encodeURIComponent(page)}`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPublishedAlbumsByPageAndSection(page: string, section: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published?page=${encodeURIComponent(page)}&section=${encodeURIComponent(section)}`, { headers: this.getAuthHeaders() }).pipe(
       catchError(this.handleError)
     );
   }

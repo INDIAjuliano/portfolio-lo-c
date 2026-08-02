@@ -1,11 +1,16 @@
 <div class="theme-studio">
   <!-- Top Navigation -->
+  <div class="admin-tabs">
+    <button class="admin-tab" [class.active]="!managePagesTabActive" (click)="managePagesTabActive = false">Theme</button>
+    <button class="admin-tab" [class.active]="managePagesTabActive" (click)="managePagesTabActive = true">Manage Pages</button>
+  </div>
 
   <main class="studio-main">
 
     <div class="studio-layout">
       <!-- Main Content -->
       <div class="studio-content">
+        <div class="tab-panel" [class.hidden]="managePagesTabActive">
         <!-- Current Theme -->
         <section class="studio-section">
           <div class="studio-section-header">
@@ -98,6 +103,7 @@
             }
           </div>
         </section>
+        </div>
       </div>
     </div>
   </main>
@@ -186,4 +192,103 @@
       </button>
     </div>
   }
+
+  <div class="tab-panel" [class.hidden]="managePagesTabActive">
+    <div class="manage-pages-container">
+      <div class="manage-page-section">
+        <div class="page-header">
+          <app-icon name="home" size="24" class="page-icon"></app-icon>
+          <h2>Page Home</h2>
+        </div>
+        <div class="page-sections">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Hero Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Bannière principale avec titre, sous-titre et bouton d'appel à action.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>About Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Section présentation avec photo et texte de bio.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Portfolio Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Grille des réalisations et projets.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Contact Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Formulaire de contact et informations.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="manage-page-section">
+        <div class="page-header">
+          <app-icon name="photo_library" size="24" class="page-icon"></app-icon>
+          <h2>Page Gallery</h2>
+        </div>
+        <div class="page-sections">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Gallery Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Grille masonry avec filtres par catégorie et lightbox.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Categories Filter</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Filtres dynamiques par catégorie.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Lightbox</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Prévisualisation plein écran avec navigation.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
