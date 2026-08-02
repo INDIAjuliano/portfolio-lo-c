@@ -33,6 +33,7 @@ readonly class MediaResponse
     public int $likes;
     public ?int $albumId;
     public ?string $albumName;
+    public ?string $category;
     public array $albums;
 
     private function __construct(
@@ -63,6 +64,7 @@ readonly class MediaResponse
         int $likes,
         ?int $albumId,
         ?string $albumName,
+        ?string $category,
         array $albums
     ) {
         $this->id = $id;
@@ -92,6 +94,7 @@ readonly class MediaResponse
         $this->likes = $likes;
         $this->albumId = $albumId;
         $this->albumName = $albumName;
+        $this->category = $category;
         $this->albums = $albums;
     }
 
@@ -99,6 +102,7 @@ readonly class MediaResponse
     {
         $albumId = null;
         $albumName = null;
+        $category = null;
         $albums = [];
         foreach ($media->getAlbumMedia() as $albumMedia) {
             $album = $albumMedia->getAlbum();
@@ -107,6 +111,7 @@ readonly class MediaResponse
             if ($albumId === null) {
                 $albumId = $album->getId();
                 $albumName = $album->getTitle();
+                $category = $album->getCategory()?->getName();
             }
         }
 
@@ -138,6 +143,7 @@ readonly class MediaResponse
             likes: $media->getLikes(),
             albumId: $albumId,
             albumName: $albumName,
+            category: $category,
             albums: $albums
         );
     }
@@ -172,6 +178,7 @@ readonly class MediaResponse
             'likes' => $this->likes,
             'albumId' => $this->albumId,
             'albumName' => $this->albumName,
+            'category' => $this->category,
             'albums' => $this->albums,
         ];
     }

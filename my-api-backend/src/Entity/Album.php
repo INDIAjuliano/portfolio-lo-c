@@ -33,6 +33,9 @@ class Album
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $coverUrl = null;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $isPublished = false;
+
     #[ORM\OneToMany(mappedBy: 'album', targetEntity: AlbumMedia::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $albumMedia;
 
@@ -102,6 +105,18 @@ class Album
     public function setCoverUrl(?string $coverUrl): static
     {
         $this->coverUrl = $coverUrl;
+
+        return $this;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->isPublished;
+    }
+
+    public function setIsPublished(bool $isPublished): static
+    {
+        $this->isPublished = $isPublished;
 
         return $this;
     }
