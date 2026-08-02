@@ -19,8 +19,29 @@ class MediasRepository extends ServiceEntityRepository
     public function findPublished(?string $type = null): array
     {
         $qb = $this->createQueryBuilder('m')
+            ->leftJoin('m.albumMedia', 'am')
+            ->leftJoin('am.album', 'a')
             ->andWhere('m.isPublished = :published')
             ->setParameter('published', true)
+            ->orderBy('m.id', 'DESC');
+
+        if ($type !== null) {
+            $qb->andWhere('m.type = :type')
+                ->setParameter('type', $type);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findPublic(?string $type = null): array
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->leftJoin('m.albumMedia', 'am')
+            ->leftJoin('am.album', 'a')
+            ->andWhere('m.isPublished = :published')
+            ->setParameter('published', true)
+            ->orWhere('a.isPublished = :albumPublished')
+            ->setParameter('albumPublished', true)
             ->orderBy('m.id', 'DESC');
 
         if ($type !== null) {

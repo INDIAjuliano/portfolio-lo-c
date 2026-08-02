@@ -49,6 +49,7 @@ class AlbumController
         $album->setTitle($data['title'] ?? '');
         if (!empty($data['description'])) $album->setDescription($data['description']);
         if (!empty($data['coverUrl'])) $album->setCoverUrl($data['coverUrl']);
+        if (array_key_exists('isPublished', $data)) $album->setIsPublished((bool) $data['isPublished']);
         $album->setCategory($category);
 
         $this->em->persist($album);
@@ -83,6 +84,7 @@ class AlbumController
         if (isset($data['title'])) $album->setTitle((string) $data['title']);
         if (array_key_exists('description', $data)) $album->setDescription($data['description'] ?: null);
         if (array_key_exists('coverUrl', $data)) $album->setCoverUrl($data['coverUrl'] ?: null);
+        if (array_key_exists('isPublished', $data)) $album->setIsPublished((bool) $data['isPublished']);
 
         if (array_key_exists('mediaIds', $data)) {
             $this->syncAlbumMedia($album, $data['mediaIds']);

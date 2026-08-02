@@ -12,6 +12,7 @@ readonly class AlbumResponse
     public ?int $coverMediaId;
     public ?int $categoryId;
     public ?string $coverUrl;
+    public bool $isPublished;
     public array $mediaIds;
 
     private function __construct(
@@ -21,6 +22,7 @@ readonly class AlbumResponse
         ?int $coverMediaId,
         ?int $categoryId,
         ?string $coverUrl,
+        bool $isPublished,
         array $mediaIds
     ) {
         $this->id = $id;
@@ -29,6 +31,7 @@ readonly class AlbumResponse
         $this->coverMediaId = $coverMediaId;
         $this->categoryId = $categoryId;
         $this->coverUrl = $coverUrl;
+        $this->isPublished = $isPublished;
         $this->mediaIds = $mediaIds;
     }
 
@@ -47,6 +50,7 @@ readonly class AlbumResponse
             coverMediaId: $album->getMedia()?->getId(),
             categoryId: $album->getCategory()?->getId(),
             coverUrl: $album->getCoverUrl(),
+            isPublished: $album->isPublished(),
             mediaIds: $mediaIds
         );
     }
@@ -60,6 +64,7 @@ readonly class AlbumResponse
             'coverMediaId' => $this->coverMediaId,
             'categoryId' => $this->categoryId,
             'coverUrl' => $this->coverUrl,
+            'isPublished' => $this->isPublished,
             'mediaIds' => $this->mediaIds,
         ];
     }
