@@ -3,6 +3,7 @@
 namespace App\Dto;
 
 use App\Entity\Album;
+use App\Entity\AlbumMedia;
 
 readonly class AlbumResponse
 {
@@ -14,6 +15,9 @@ readonly class AlbumResponse
     public ?string $coverUrl;
     public bool $isPublished;
     public array $mediaIds;
+    public array $media;
+    public ?string $page;
+    public ?string $section;
 
     private function __construct(
         int $id,
@@ -23,7 +27,10 @@ readonly class AlbumResponse
         ?int $categoryId,
         ?string $coverUrl,
         bool $isPublished,
-        array $mediaIds
+        array $mediaIds,
+        array $media,
+        ?string $page,
+        ?string $section
     ) {
         $this->id = $id;
         $this->title = $title;
@@ -33,13 +40,28 @@ readonly class AlbumResponse
         $this->coverUrl = $coverUrl;
         $this->isPublished = $isPublished;
         $this->mediaIds = $mediaIds;
+        $this->media = $media;
+        $this->page = $page;
+        $this->section = $section;
     }
 
     public static function fromEntity(Album $album): self
     {
         $mediaIds = [];
+        $media = [];
         foreach ($album->getAlbumMedia() as $albumMedia) {
-            $mediaIds[] = $albumMedia->getMedia()?->getId();
+            $mediaEntity = $albumMedia->getMedia();
+            if (!$mediaEntity) continue;
+            $mediaIds[] = $mediaEntity->getId();
+            $media[] = [
+                'id' => $mediaEntity->getId(),
+                'title' => $mediaEntity->getTitle(),
+                'type' => $mediaEntity->getType(),
+                'imageUrl' => $mediaEntity->getImageUrl(),
+                'videoUrl' => $mediaEntity->getVideoUrl(),
+                'thumbnailUrl' => $mediaEntity->getThumbnailUrl(),
+                'url' => $mediaEntity->getImageUrl() ?: $mediaEntity->getVideoUrl(),
+            ];
         }
         $mediaIds = array_values(array_filter($mediaIds));
 
@@ -51,21 +73,55 @@ readonly class AlbumResponse
             categoryId: $album->getCategory()?->getId(),
             coverUrl: $album->getCoverUrl(),
             isPublished: $album->isPublished(),
-            mediaIds: $mediaIds
+            mediaIds: $mediaIds,
+            media: $media,
+            page: $album->getPage(),
+            section: $album->getSection()
         );
     }
 
-    public function toArray(): array
+    public function toArray(string $baseUrl = ''): array
     {
+        $baseUrl = rtrim($baseUrl, '/');
+
+        $media = [];
+        foreach ($this->media as $item) {
+            $media[] = [
+                'id' => $item['id'],
+                'title' => $item['title'],
+                'type' => $item['type'],
+                'imageUrl' => $this->prependBaseUrl($item['imageUrl'], $baseUrl),
+                'videoUrl' => $this->prependBaseUrl($item['videoUrl'], $baseUrl),
+                'thumbnailUrl' => $this->prependBaseUrl($item['thumbnailUrl'], $baseUrl),
+                'url' => $this->prependBaseUrl($item['url'], $baseUrl),
+            ];
+        }
+
         return [
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
             'coverMediaId' => $this->coverMediaId,
             'categoryId' => $this->categoryId,
-            'coverUrl' => $this->coverUrl,
+            'coverUrl' => $this->prependBaseUrl($this->coverUrl, $baseUrl),
             'isPublished' => $this->isPublished,
             'mediaIds' => $this->mediaIds,
+            'media' => $media,
+            'page' => $this->page,
+            'section' => $this->section,
         ];
+    }
+
+    private function prependBaseUrl(?string $url, string $baseUrl): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://') || str_starts_with($url, '//')) {
+            return $url;
+        }
+
+        return $baseUrl . $url;
     }
 }

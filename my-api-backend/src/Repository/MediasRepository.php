@@ -37,10 +37,13 @@ class MediasRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('m')
             ->leftJoin('m.albumMedia', 'am')
-            ->leftJoin('am.album', 'a')
-            ->andWhere('m.isPublished = :published')
+            ->leftJoin('am.album', 'a');
+
+        $qb->andWhere($qb->expr()->orX(
+            'm.isPublished = :published',
+            'a.isPublished = :albumPublished'
+        ))
             ->setParameter('published', true)
-            ->orWhere('a.isPublished = :albumPublished')
             ->setParameter('albumPublished', true)
             ->orderBy('m.id', 'DESC');
 

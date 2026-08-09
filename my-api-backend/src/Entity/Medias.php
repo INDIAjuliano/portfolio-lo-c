@@ -91,6 +91,9 @@ class Medias
     #[ORM\OneToMany(mappedBy: 'media', targetEntity: AlbumMedia::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $albumMedia;
 
+    #[ORM\OneToMany(mappedBy: 'media', targetEntity: Album::class)]
+    private Collection $albums;
+
     public function __construct()
     {
         $this->albums = new ArrayCollection();

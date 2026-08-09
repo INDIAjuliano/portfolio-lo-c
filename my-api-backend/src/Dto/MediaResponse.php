@@ -148,20 +148,22 @@ readonly class MediaResponse
         );
     }
 
-    public function toArray(): array
+    public function toArray(string $baseUrl = ''): array
     {
+        $baseUrl = rtrim($baseUrl, '/');
+
         return [
             'id' => $this->id,
             'title' => $this->title,
             'slug' => $this->slug,
             'description' => $this->description,
             'type' => $this->type,
-            'imageUrl' => $this->imageUrl,
-            'videoUrl' => $this->videoUrl,
-            'embedUrl' => $this->embedUrl,
+            'imageUrl' => $this->prependBaseUrl($this->imageUrl, $baseUrl),
+            'videoUrl' => $this->prependBaseUrl($this->videoUrl, $baseUrl),
+            'embedUrl' => $this->prependBaseUrl($this->embedUrl, $baseUrl),
             'platform' => $this->platform,
             'videoId' => $this->videoId,
-            'thumbnailUrl' => $this->thumbnailUrl,
+            'thumbnailUrl' => $this->prependBaseUrl($this->thumbnailUrl, $baseUrl),
             'width' => $this->width,
             'height' => $this->height,
             'orientation' => $this->orientation,
@@ -181,5 +183,18 @@ readonly class MediaResponse
             'category' => $this->category,
             'albums' => $this->albums,
         ];
+    }
+
+    private function prependBaseUrl(?string $url, string $baseUrl): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://') || str_starts_with($url, '//')) {
+            return $url;
+        }
+
+        return $baseUrl . $url;
     }
 }

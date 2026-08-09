@@ -30,8 +30,9 @@ class AlbumController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
         $albums = $this->repository->findAll();
-        $data = array_map(static fn (Album $a) => AlbumResponse::fromEntity($a)->toArray(), $albums);
+        $data = array_map(static fn (Album $a) => AlbumResponse::fromEntity($a)->toArray($baseUrl), $albums);
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
@@ -50,14 +51,17 @@ class AlbumController
         if (!empty($data['description'])) $album->setDescription($data['description']);
         if (!empty($data['coverUrl'])) $album->setCoverUrl($data['coverUrl']);
         if (array_key_exists('isPublished', $data)) $album->setIsPublished((bool) $data['isPublished']);
+        if (array_key_exists('page', $data)) $album->setPage($data['page'] ?: null);
+        if (array_key_exists('section', $data)) $album->setSection($data['section'] ?: null);
         $album->setCategory($category);
 
         $this->em->persist($album);
         $this->em->flush();
 
-        $this->syncAlbumMedia($album, $data['mediaIds'] ?? []);
+        $this->syncAlbumMedia($album, $data['mediaIds'] ?? [], $data['mediaUrls'] ?? []);
 
-        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray(), JsonResponse::HTTP_CREATED);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray($baseUrl), JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
@@ -68,7 +72,8 @@ class AlbumController
             return new JsonResponse(['error' => 'Album not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray(), JsonResponse::HTTP_OK);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray($baseUrl), JsonResponse::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'update', methods: ['PUT'], requirements: ['id' => '\d+'])]
@@ -85,11 +90,17 @@ class AlbumController
         if (array_key_exists('description', $data)) $album->setDescription($data['description'] ?: null);
         if (array_key_exists('coverUrl', $data)) $album->setCoverUrl($data['coverUrl'] ?: null);
         if (array_key_exists('isPublished', $data)) $album->setIsPublished((bool) $data['isPublished']);
+        if (array_key_exists('page', $data)) $album->setPage($data['page'] ?: null);
+        if (array_key_exists('section', $data)) $album->setSection($data['section'] ?: null);
 
         if (array_key_exists('mediaIds', $data)) {
-            $this->syncAlbumMedia($album, $data['mediaIds']);
+            $this->syncAlbumMedia($album, $data['mediaIds'], $data['mediaUrls'] ?? []);
         } elseif (array_key_exists('mediaId', $data)) {
             $album->setMedia($data['mediaId'] ? $this->mediaRepository->find($data['mediaId']) : null);
+        }
+
+        if (array_key_exists('mediaUrls', $data) && $data['mediaUrls'] !== null) {
+            $this->syncAlbumMediaFromUrls($album, $data['mediaUrls']);
         }
 
         if (array_key_exists('categoryId', $data) && $data['categoryId'] !== null) {
@@ -102,7 +113,8 @@ class AlbumController
 
         $this->em->flush();
 
-        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray(), JsonResponse::HTTP_OK);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray($baseUrl), JsonResponse::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
@@ -169,7 +181,8 @@ class AlbumController
             $this->em->flush();
         }
 
-        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray(), JsonResponse::HTTP_OK);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray($baseUrl), JsonResponse::HTTP_OK);
     }
 
     #[Route('/{id}/media/{mediaId}', name: 'remove_media', methods: ['DELETE'], requirements: ['id' => '\d+', 'mediaId' => '\d+'])]
@@ -191,10 +204,11 @@ class AlbumController
             $this->em->flush();
         }
 
-        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray(), JsonResponse::HTTP_OK);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(AlbumResponse::fromEntity($album)->toArray($baseUrl), JsonResponse::HTTP_OK);
     }
 
-    private function syncAlbumMedia(Album $album, array $mediaIds): void
+    private function syncAlbumMedia(Album $album, array $mediaIds, array $mediaUrls = []): void
     {
         $existing = $album->getAlbumMedia();
         $existingIds = [];
@@ -223,6 +237,32 @@ class AlbumController
             $this->em->persist($albumMedia);
         }
 
+        $this->syncAlbumMediaFromUrls($album, $mediaUrls);
+
         $this->em->flush();
+    }
+
+    private function syncAlbumMediaFromUrls(Album $album, array $urls): void
+    {
+        foreach ($urls as $url) {
+            $existing = $this->em->getRepository(AlbumMedia::class)->findOneBy(['album' => $album]);
+            if ($existing && $existing->getMedia() && $existing->getMedia()->getImageUrl() === $url) {
+                continue;
+            }
+
+            $media = new Medias();
+            $media->setTitle($album->getTitle() . ' - Photo');
+            $media->setSlug(strtolower(preg_replace('/[^a-z0-9]+/i', '-', $url)) ?: 'photo');
+            $media->setType('image');
+            $media->setImageUrl($url);
+            $media->setIsPublished(true);
+
+            $this->em->persist($media);
+
+            $albumMedia = new AlbumMedia();
+            $albumMedia->setAlbum($album);
+            $albumMedia->setMedia($media);
+            $this->em->persist($albumMedia);
+        }
     }
 }

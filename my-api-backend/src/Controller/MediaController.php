@@ -37,7 +37,8 @@ class MediaController
             $media = $type !== null ? $this->repository->findPublished($type) : $this->repository->findPublished();
         }
 
-        $data = array_map(static fn (Medias $m) => MediaResponse::fromEntity($m)->toArray(), $media);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        $data = array_map(static fn (Medias $m) => MediaResponse::fromEntity($m)->toArray($baseUrl), $media);
 
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
@@ -84,7 +85,8 @@ class MediaController
         $this->em->persist($media);
         $this->em->flush();
 
-        return new JsonResponse(MediaResponse::fromEntity($media)->toArray(), JsonResponse::HTTP_CREATED);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(MediaResponse::fromEntity($media)->toArray($baseUrl), JsonResponse::HTTP_CREATED);
     }
 
     private function generateUniqueSlug(string $base): string
@@ -119,7 +121,8 @@ class MediaController
             return new JsonResponse(['error' => 'Media not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse(MediaResponse::fromEntity($media)->toArray(), JsonResponse::HTTP_OK);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(MediaResponse::fromEntity($media)->toArray($baseUrl), JsonResponse::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'update', methods: ['PUT'], requirements: ['id' => '\d+'])]
@@ -160,7 +163,8 @@ class MediaController
 
         $this->em->flush();
 
-        return new JsonResponse(MediaResponse::fromEntity($media)->toArray(), JsonResponse::HTTP_OK);
+        $baseUrl = rtrim($_ENV['PUBLIC_BASE_URL'] ?? 'http://127.0.0.1:8000', '/');
+        return new JsonResponse(MediaResponse::fromEntity($media)->toArray($baseUrl), JsonResponse::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
