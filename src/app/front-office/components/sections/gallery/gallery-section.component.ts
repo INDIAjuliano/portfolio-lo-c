@@ -2,7 +2,7 @@ import { Component, AfterViewInit, ViewChild, ElementRef, HostListener, OnDestro
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 import { IconComponent } from '../../icon/icon.component';
-import { ApiService } from '../../../../core/services/api.service';
+import { ContentService } from '../../../../core/services/content.service';
 import { environment } from '../../../../../environments/environment';
 import { HeroGalleryComponent } from './hero-gallery.component';
 import { ScrollInfiniteDirective } from '../../../../shared/directives/scroll-infinite.directive';
@@ -44,7 +44,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
   isLoadingMore = false;
   allGalleryData: GalleryItem[] = [];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private contentService: ContentService) {}
 
   getFilteredItems(): GalleryItem[] {
     return this.currentFilter === 'all'
@@ -81,7 +81,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     this.allGalleryData = [];
     this.galleryData = [];
 
-    this.apiService.getPublicMediaPage(1, PAGE_SIZE).subscribe({
+    this.contentService.getPublicMediaPage(1, PAGE_SIZE).subscribe({
       next: (media: any[]) => {
         const mapped = media.map((m: any) => this.mapGalleryItem(m));
         this.allGalleryData = mapped;
@@ -103,7 +103,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     if (this.isLoadingMore || !this.hasMore) return;
 
     this.isLoadingMore = true;
-    this.apiService.getPublicMediaPage(this.currentPage, PAGE_SIZE).subscribe({
+    this.contentService.getPublicMediaPage(this.currentPage, PAGE_SIZE).subscribe({
       next: (media: any[]) => {
         const mapped = media.map((m: any) => this.mapGalleryItem(m));
         this.allGalleryData = [...this.allGalleryData, ...mapped];
@@ -146,7 +146,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
   private getAbsoluteUrl(url: string): string {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('//')) return 'https:' + url;
+    if (url.startsWith('//')) return (environment.apiUrl.startsWith('https') ? 'https:' : 'http:') + url;
     if (url.startsWith('/')) return environment.apiUrl.replace('/api', '') + url;
     return environment.apiUrl.replace('/api', '') + '/' + url;
   }

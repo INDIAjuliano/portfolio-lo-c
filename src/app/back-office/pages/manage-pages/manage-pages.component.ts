@@ -19,6 +19,7 @@ interface Album {
   categoryId?: number;
   page?: string;
   section?: string;
+  mediaUrls?: string[];
 }
 
 @Component({
@@ -48,6 +49,24 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
   coverFile: File | null = null;
   coverPreview: string | null = null;
   selectedPage = 'home';
+  selectedSection = '';
+
+  setSelectedPage(page: string): void {
+    this.selectedPage = page;
+    this.selectedSection = this.sections[page]?.[0]?.value || '';
+  }
+
+  pageMediaFiles: File[] = [];
+  pageMediaPreviews: string[] = [];
+  pageFiles: {name: string; label: string; uploadDir: string; files: string[]}[] = [];
+  isLoadingPageFiles = false;
+
+  viewMode: 'grid' | 'list' | 'carousel' | 'cover' = 'carousel';
+  coverImages: Record<string, string> = {};
+  coverImageKey = '';
+  coverImageFile: File | null = null;
+  coverImagePreview: string | null = null;
+  coverImageSource: 'url' | 'file' = 'url';
 
   showImageModal = false;
   isEditingImage = false;
@@ -80,7 +99,8 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
     mediaIds: [],
     categoryId: 0,
     page: '',
-    section: ''
+    section: '',
+    mediaUrls: []
   };
 
   readonly DEFAULT_ALBUM_COVER = 'https://images.pexels.com/photos/10965788/pexels-photo-10965788.jpeg';
@@ -118,12 +138,18 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
     ]
   };
 
+  private readonly HERO_FRAMES_ALBUM_ID = -1;
+  private readonly HERO_FRAMES_PATH = '/assets/images/hero-frames';
+
   ngOnInit(): void {
     if (typeof document === 'undefined') return;
     if (!this.authService.isAuthenticated()) {
       return;
     }
+    this.selectedSection = this.sections[this.selectedPage]?.[0]?.value || '';
     this.loadDataFromApi();
+    this.loadPageFiles();
+    this.loadCoverImages();
   }
 
   ngOnDestroy(): void {
@@ -167,17 +193,24 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
     return {
       id: a.id,
       name: a.title || 'Sans titre',
-      cover: a.coverUrl || a.coverMedia?.imageUrl || a.coverMedia?.videoUrl || this.DEFAULT_ALBUM_COVER,
+      cover: this.getAbsoluteUrl(a.coverUrl || a.coverMedia?.imageUrl || a.coverMedia?.videoUrl || this.DEFAULT_ALBUM_COVER),
       category: a.category?.name || 'Non classé',
       photosCount: (a.mediaIds || []).length,
       status: a.isPublished ? 'published' : 'draft',
       description: a.description || '',
-      coverUrl: a.coverUrl || '',
+      coverUrl: this.getAbsoluteUrl(a.coverUrl || ''),
       mediaIds: a.mediaIds || [],
       categoryId: a.categoryId,
       page: a.page || '',
       section: a.section || ''
     };
+  }
+
+  private getAbsoluteUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+     if (url.startsWith('//')) return (environment.apiUrl.startsWith('https') ? 'https:' : 'http:') + url;
+    return environment.apiUrl.replace('/api', '') + url;
   }
 
   get selectedAlbumName(): string {
@@ -186,6 +219,133 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
 
   get selectedAlbumPhotosCount(): number {
     return this.selectedAlbum?.photosCount || 0;
+  }
+
+  get currentCoverImage(): string {
+    return this.coverImages[this.coverImageKey] || '';
+  }
+
+  updateCoverImageKey(): void {
+    this.coverImageKey = `cover-image-${this.selectedPage}-${this.selectedSection}`;
+    this.coverImageFile = null;
+    this.coverImagePreview = this.currentCoverImage || null;
+    if (!this.coverImagePreview) {
+      this.coverImageSource = 'url';
+    }
+  }
+
+  getCurrentSection(): string {
+    return this.sections[this.selectedPage]?.[0]?.value || '';
+  }
+
+  private loadCoverImages(): void {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('coverImages');
+        this.coverImages = raw ? JSON.parse(raw) : {};
+      } catch {
+        this.coverImages = {};
+      }
+    }
+    this.updateCoverImageKey();
+  }
+
+  private persistCoverImages(): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('coverImages', JSON.stringify(this.coverImages));
+    }
+  }
+
+  onCoverImageFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    this.coverImageFile = file;
+    this.resizeImageFile(file, 1920, 1080).then((dataUrl) => {
+      this.coverImagePreview = dataUrl;
+      this.setCoverImagePreviewVisible();
+    }).catch(() => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.coverImagePreview = reader.result as string;
+        this.setCoverImagePreviewVisible();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private setCoverImagePreviewVisible(): void {
+    const el = document.getElementById('heroGalleryFallback');
+    if (el) (el as HTMLElement).style.display = 'none';
+  }
+
+  private resizeImageFile(file: File, maxWidth: number, maxHeight: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas context error')); return; }
+
+        let { width, height } = img;
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const mimeType = file.type || 'image/jpeg';
+        const quality = mimeType === 'image/png' ? 1.0 : 0.85;
+        const dataUrl = canvas.toDataURL(mimeType, quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Image load error'));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  saveCoverImage(): void {
+    if (!this.coverImagePreview) return;
+    this.coverImages[this.coverImageKey] = this.coverImagePreview;
+    try {
+      this.persistCoverImages();
+      this.showToastMessage('Image de couverture enregistrée', 'success');
+    } catch (e) {
+      console.error('Failed to save cover image to localStorage:', e);
+      delete this.coverImages[this.coverImageKey];
+      this.showToastMessage('Image trop volumineuse. Utilisez une URL ou une image plus petite.', 'error');
+    }
+  }
+
+  removeCoverImage(): void {
+    delete this.coverImages[this.coverImageKey];
+    this.coverImageFile = null;
+    this.coverImagePreview = null;
+    this.persistCoverImages();
+    this.showToastMessage('Image de couverture supprimée', 'success');
+  }
+
+  setViewMode(mode: 'grid' | 'list' | 'carousel' | 'cover'): void {
+    this.viewMode = mode;
+    if (mode === 'cover') {
+      this.updateCoverImageKey();
+    }
+  }
+
+  isViewModeActive(mode: 'grid' | 'list' | 'carousel' | 'cover'): boolean {
+    return this.viewMode === mode;
+  }
+
+  isCoverModeActive(): boolean {
+    return this.viewMode === 'cover';
   }
 
   getAlbumLocation(album: Album): string {
@@ -198,13 +358,23 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
   }
 
   getPageSectionAlbums(page: string, section: string): Album[] {
-    return this.albums.filter(a => {
+    const apiAlbums = this.albums.filter(a => {
       if (a.page !== page) return false;
       if (section === 'main') {
         return !a.section;
       }
       return a.section === section;
     });
+
+    if (page === 'home' && section === 'hero') {
+      const hasHeroFrames = apiAlbums.some(a => a.id === this.HERO_FRAMES_ALBUM_ID);
+      if (!hasHeroFrames) {
+        const heroFramesAlbum = this.getHeroFramesAlbum();
+        return [heroFramesAlbum, ...apiAlbums];
+      }
+    }
+
+    return apiAlbums;
   }
 
   isAlbumDetailVisible(page: string, section: string): boolean {
@@ -226,7 +396,8 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
       mediaIds: [],
       categoryId: this.categories.length > 0 ? this.categories[0].id : 0,
       page: pageValue,
-      section: sectionValue
+      section: sectionValue,
+      mediaUrls: []
     };
     this.coverSource = 'url';
     this.coverFile = null;
@@ -243,7 +414,8 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
       mediaIds: album.mediaIds || [],
       categoryId: album.categoryId || 0,
       page: album.page || '',
-      section: album.section || ''
+      section: album.section || '',
+      mediaUrls: album.mediaUrls || []
     };
     this.coverFile = null;
     this.coverPreview = album.cover || null;
@@ -267,7 +439,49 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
     this.albumImages = [];
   }
 
+  private getHeroFramesAlbum(): Album {
+    return {
+      id: this.HERO_FRAMES_ALBUM_ID,
+      name: 'Hero Frames',
+      cover: `${this.HERO_FRAMES_PATH}/frame_001.jpg`,
+      category: 'Hero',
+      photosCount: 192,
+      status: 'published',
+      description: 'Images par défaut pour le hero 1',
+      coverUrl: `${this.HERO_FRAMES_PATH}/frame_001.jpg`,
+      mediaIds: [],
+      categoryId: 0,
+      page: 'home',
+      section: 'hero'
+    };
+  }
+
+  private getHeroFramesImages(): any[] {
+    const images: any[] = [];
+    for (let i = 1; i <= 192; i++) {
+      const padded = String(i).padStart(4, '0');
+      images.push({
+        id: -i,
+        title: `Hero Frame ${padded}`,
+        description: '',
+        type: 'image',
+        imageUrl: `${this.HERO_FRAMES_PATH}/frame_${padded}.jpg`,
+        videoUrl: null,
+        tags: [],
+        isPublished: true,
+        isFeatured: false,
+        thumbnailUrl: `${this.HERO_FRAMES_PATH}/frame_${padded}.jpg`
+      });
+    }
+    return images;
+  }
+
   loadAlbumImages(albumId: number): void {
+    if (albumId === this.HERO_FRAMES_ALBUM_ID) {
+      this.albumImages = this.getHeroFramesImages();
+      return;
+    }
+
     this.apiService.getMedia().subscribe({
       next: (media: any[]) => {
         const allMedia = media;
@@ -275,7 +489,15 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
           next: (albums: any[]) => {
             const album = albums.find(a => a.id === albumId);
             const mediaIds = album?.mediaIds || [];
-            this.albumImages = allMedia.filter((m: any) => mediaIds.includes(m.id));
+            this.albumImages = allMedia
+              .filter((m: any) => mediaIds.includes(m.id))
+              .map((m: any) => ({
+                ...m,
+                imageUrl: this.getAbsoluteUrl(m.imageUrl),
+                thumbnailUrl: this.getAbsoluteUrl(m.thumbnailUrl),
+                videoUrl: this.getAbsoluteUrl(m.videoUrl),
+                embedUrl: this.getAbsoluteUrl(m.embedUrl)
+              }));
           }
         });
       }
@@ -571,6 +793,74 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
         this.coverPreview = null;
       }
     });
+  }
+
+  onPageMediaFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const files = Array.from(input.files);
+    this.pageMediaFiles = files;
+    this.pageMediaPreviews = [];
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.pageMediaPreviews.push(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  uploadPageMedia(): void {
+    if (!this.selectedPage || this.pageMediaFiles.length === 0) {
+      alert('Veuillez sélectionner une page et des fichiers');
+      return;
+    }
+
+    this.isSubmitting = true;
+    const uploadPromises = this.pageMediaFiles.map(file =>
+      this.apiService.uploadMediaForPage(this.selectedPage, file)
+    );
+
+    forkJoin(uploadPromises).subscribe({
+      next: (results) => {
+        results.forEach((res) => {
+          this.apiService.storeMediaUrl(res.url, res.page, res.type).subscribe({
+            next: () => {
+              this.loadPageFiles();
+            },
+            error: () => {
+              console.error('Failed to store media URL', res.url);
+            }
+          });
+        });
+        this.pageMediaFiles = [];
+        this.pageMediaPreviews = [];
+        this.showToastMessage('Médias uploadés avec succès', 'success');
+        this.isSubmitting = false;
+      },
+      error: () => {
+        this.showToastMessage('Erreur lors de l\'upload des médias', 'error');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  loadPageFiles(): void {
+    this.isLoadingPageFiles = true;
+    this.apiService.listPages().subscribe({
+      next: (pages) => {
+        this.pageFiles = pages;
+        this.isLoadingPageFiles = false;
+      },
+      error: () => {
+        this.isLoadingPageFiles = false;
+      }
+    });
+  }
+
+  getPageFiles(page: string): string[] {
+    const pageData = this.pageFiles.find(p => p.name === page);
+    return pageData?.files || [];
   }
 
   trackByAlbumId(index: number, album: Album): number {

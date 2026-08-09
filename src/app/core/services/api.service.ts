@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -99,6 +99,7 @@ export interface AlbumCreateRequest {
   isPublished?: boolean;
   page?: string | null;
   section?: string | null;
+  mediaUrls?: string[];
 }
 
 export interface AlbumUpdateRequest {
@@ -110,6 +111,7 @@ export interface AlbumUpdateRequest {
   isPublished?: boolean;
   page?: string | null;
   section?: string | null;
+  mediaUrls?: string[];
 }
 
 @Injectable({
@@ -367,6 +369,30 @@ export class ApiService {
     );
   }
 
+  uploadMediaForPage(page: string, file: File): Observable<{url: string; type: string; mimeType: string; size: number; page: string}> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
+    return this.http.post<{url: string; type: string; mimeType: string; size: number; page: string}>(`${this.apiUrl}/upload/media/page/${encodeURIComponent(page)}`, formData, { headers }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  storeMediaUrl(url: string, page: string, type: string = 'image'): Observable<{url: string; type: string; page: string; stored: boolean}> {
+    return this.http.post<{url: string; type: string; page: string; stored: boolean}>(`${this.apiUrl}/upload/media/url`, { url, page, type }, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  listPages(): Observable<{name: string; label: string; uploadDir: string; files: string[]}[]> {
+    return this.http.get<{name: string; label: string; uploadDir: string; files: string[]}[]>(`${this.apiUrl}/upload/pages`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   // ==================== CONTACTS ====================
 
   getContacts(): Observable<any[]> {
@@ -377,6 +403,26 @@ export class ApiService {
 
   createContact(contact: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/contacts`, contact, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // ==================== SECTION PAGES ====================
+
+  getSectionPages(page?: string, section?: string): Observable<any[]> {
+    let url = `${this.apiUrl}/section-pages`;
+    const params = new HttpParams();
+    if (page) {
+      params.set('page', page);
+    }
+    if (section) {
+      params.set('section', section);
+    }
+    const queryString = params.toString();
+    if (queryString) {
+      url += '?' + queryString;
+    }
+    return this.http.get<any[]>(url, { headers: this.getAuthHeaders() }).pipe(
       catchError(this.handleError)
     );
   }

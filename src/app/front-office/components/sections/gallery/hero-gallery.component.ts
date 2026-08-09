@@ -2,7 +2,7 @@ import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild, HostListene
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { CarouselAlbumService } from '../../../services/carousel-album.service';
+import { ContentService } from '../../../../core/services/content.service';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,7 +27,7 @@ export class HeroGalleryComponent implements AfterViewInit, OnDestroy {
   @ViewChild('heroGalleryCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('heroGalleryScrollIndicator') scrollIndicatorRef!: ElementRef<HTMLDivElement>;
 
-  private carouselAlbumService = inject(CarouselAlbumService);
+  private contentService = inject(ContentService);
   private renderer: any = null;
   private morphReady = false;
   private currentSlide = 0;
@@ -65,9 +65,18 @@ export class HeroGalleryComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadCarouselAlbum(): void {
-    this.carouselAlbumService.getPublishedAlbumsByPageAndSection(GALLERY_PAGE, GALLERY_SECTION).subscribe({
+    const storedCover = this.getStoredCoverImage();
+    if (storedCover) {
+      this.slideImages = [storedCover];
+      this.initDotsAndThumbs();
+      this.initCarouselOrFallback();
+      this.startSlideshow();
+      return;
+    }
+
+    this.contentService.getPublishedAlbumsByPageAndSection(GALLERY_PAGE, GALLERY_SECTION).subscribe({
       next: (albums) => {
-        const album = albums.find((a: any) => a.isPublished);
+        const album = albums.find((a: any) => a.isPublished) as any;
         if (album && album.media && album.media.length > 0) {
           this.slideImages = album.media
             .filter((m: any) => m.type === 'image' && (m.url || m.imageUrl))
@@ -76,18 +85,56 @@ export class HeroGalleryComponent implements AfterViewInit, OnDestroy {
         if (this.slideImages.length === 0) {
           this.slideImages = DEFAULT_GALLERY_HERO_IMAGES;
         }
-        this.initMorphRenderer();
+        this.initDotsAndThumbs();
+        this.initCarouselOrFallback();
         this.startSlideshow();
       },
       error: () => {
         this.slideImages = DEFAULT_GALLERY_HERO_IMAGES;
-        this.initMorphRenderer();
+        this.initDotsAndThumbs();
+        this.initCarouselOrFallback();
         this.startSlideshow();
       }
     });
   }
 
+  private getStoredCoverImage(): string | null {
+    if (typeof localStorage === 'undefined') return null;
+    const key = `cover-image-${GALLERY_PAGE}-${GALLERY_SECTION}`;
+    const raw = localStorage.getItem('coverImages');
+    if (!raw) return null;
+    try {
+      const all = JSON.parse(raw) as Record<string, string>;
+      return all[key] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private initCarouselOrFallback(): void {
+    if (this.slideImages.length <= 1) {
+      this.useFallback = true;
+      this.initFallbackCarousel();
+      return;
+    }
+    this.initMorphRenderer();
+  }
+
   private async initMorphRenderer(): Promise<void> {
+    this.initFallbackCarousel();
+
+    const initTimeout = setTimeout(() => {
+      if (!this.morphReady) {
+        console.warn('WebGL init timeout, using fallback images');
+        this.morphReady = false;
+        this.useFallback = true;
+        if (this.renderer) {
+          this.renderer.destroy();
+          this.renderer = null;
+        }
+      }
+    }, 5000);
+
     try {
       const canvas = this.canvasRef.nativeElement;
       this.renderer = new HeroGalleryMorphRenderer(canvas);
@@ -95,12 +142,23 @@ export class HeroGalleryComponent implements AfterViewInit, OnDestroy {
         this.isTransitioning = false;
       });
       await this.renderer.init(this.slideImages);
+      clearTimeout(initTimeout);
+
+      if (this.useFallback) {
+        this.renderer.destroy();
+        this.renderer = null;
+        return;
+      }
+
       this.morphReady = true;
+      canvas.style.display = 'block';
+      const fallback = document.getElementById('heroGalleryFallback');
+      if (fallback) fallback.style.display = 'none';
     } catch (e) {
-      console.warn('WebGL morph renderer failed, falling back:', e);
+      clearTimeout(initTimeout);
+      console.warn('WebGL morph renderer failed, using fallback:', e);
       this.morphReady = false;
       this.useFallback = true;
-      this.initFallbackCarousel();
     }
   }
 
@@ -335,9 +393,15 @@ class HeroGalleryMorphRenderer {
   }
 
   async init(imageUrls: string[]): Promise<void> {
-    const gl = this._canvas.getContext('webgl');
-    if (!gl) throw new Error('WebGL not supported');
+    let gl = this._canvas.getContext('webgl') as WebGLRenderingContext | null;
+    if (!gl) {
+      gl = this._canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
+      if (!gl) throw new Error('WebGL not supported');
+    }
     this._gl = gl;
+
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     const vertSrc = `
       attribute vec2 a_position;
@@ -489,6 +553,8 @@ class HeroGalleryMorphRenderer {
   private render(): void {
     const gl = this._gl;
     if (!gl || !this._ready) return;
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     let wasComplete = false;
 

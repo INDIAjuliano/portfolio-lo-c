@@ -1,7 +1,7 @@
 import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild, HostListener, inject } from '@angular/core';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { CarouselAlbumService } from '../../../services/carousel-album.service';
+import { ContentService } from '../../../../core/services/content.service';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,7 +26,7 @@ export class Hero2Component implements AfterViewInit, OnDestroy {
     @ViewChild('hero2Canvas') hero2CanvasRef!: ElementRef<HTMLCanvasElement>;
     @ViewChild('hero2ScrollIndicator') hero2ScrollIndicatorRef!: ElementRef<HTMLDivElement>;
 
-    private carouselAlbumService = inject(CarouselAlbumService);
+    private contentService = inject(ContentService);
     private renderer: any = null;
     private morphReady = false;
     private currentSlide = 0;
@@ -47,9 +47,9 @@ export class Hero2Component implements AfterViewInit, OnDestroy {
     }
 
     private loadCarouselAlbum(): void {
-        this.carouselAlbumService.getPublishedAlbumsByPageAndSection(HERO2_PAGE, HERO2_SECTION).subscribe({
+        this.contentService.getPublishedAlbumsByPageAndSection(HERO2_PAGE, HERO2_SECTION).subscribe({
           next: (albums) => {
-            const album = albums.find((a: any) => a.isPublished);
+            const album = albums.find((a: any) => a.isPublished) as any;
             if (album && album.media && album.media.length > 0) {
               this.slideImages = album.media
                 .filter((m: any) => m.type === 'image' && (m.url || m.imageUrl))

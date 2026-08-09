@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../components/icon/icon.component';
-import { ApiService, MediaItem } from '../../../core/services/api.service';
+import { ContentService, ContentMedia } from '../../../core/services/content.service';
 import { environment } from '../../../../environments/environment';
 
 interface PortfolioItem {
@@ -30,12 +30,12 @@ export class PortfolioComponent implements OnInit {
   currentLightboxIndex = 0;
   currentFilteredItems: PortfolioItem[] = [];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private contentService: ContentService) {}
 
   private getAbsoluteUrl(url: string | null | undefined): string {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('//')) return 'https:' + url;
+     if (url.startsWith('//')) return (environment.apiUrl.startsWith('https') ? 'https:' : 'http:') + url;
     if (url.startsWith('/')) return environment.apiUrl.replace('/api', '') + url;
     return environment.apiUrl.replace('/api', '') + '/' + url;
   }
@@ -48,8 +48,8 @@ export class PortfolioComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.apiService.getPublicMedia().subscribe({
-      next: (media: MediaItem[]) => {
+    this.contentService.getPublicMedia().subscribe({
+      next: (media: ContentMedia[]) => {
         this.portfolioItems = media
           .filter((m) => m.isPublished && m.imageUrl)
           .map((m) => ({

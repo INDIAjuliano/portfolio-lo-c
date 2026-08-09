@@ -37,6 +37,7 @@ interface Album {
   categoryId?: number;
   page?: string;
   section?: string;
+  mediaUrls?: string[];
 }
 
 const DEFAULT_ALBUM_COVER = 'https://images.pexels.com/photos/10965788/pexels-photo-10965788.jpeg';
@@ -123,7 +124,8 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     mediaIds: [],
     categoryId: 0,
     page: '',
-    section: ''
+    section: '',
+    mediaUrls: []
   };
   isSubmitting = false;
   editingAlbumId: number | null = null;
@@ -211,7 +213,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     this.apiService.getMedia().subscribe({
       next: (media) => {
         this.mediaItems = media;
-        this.images = media.map((m: MediaItem) => {
+        const apiImages = media.map((m: MediaItem) => {
           const absoluteImageUrl = this.getAbsoluteUrl(m.imageUrl);
           const absoluteVideoUrl = this.getAbsoluteUrl(m.videoUrl);
           return {
@@ -230,6 +232,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
             albums: (m as any).albums || []
           };
         });
+        this.images = [...this.getHeroFramesImages(), ...apiImages];
         this.isLoading = false;
       },
       error: (err) => {
@@ -241,13 +244,13 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
 
     this.apiService.getAlbums().subscribe({
       next: (albums) => {
-        this.albums = albums.map((a: any) => ({
+        const apiAlbums = albums.map((a: any) => ({
           id: a.id,
           name: a.title || 'Sans titre',
           cover: a.coverUrl || a.coverMedia?.imageUrl || a.coverMedia?.videoUrl || DEFAULT_ALBUM_COVER,
           category: a.category?.name || 'Non classé',
           photosCount: (a.mediaIds || []).length,
-          status: a.isPublished ? 'published' : 'draft',
+          status: (a.isPublished ? 'published' : 'draft') as 'published' | 'draft',
           description: a.description || '',
           coverUrl: a.coverUrl || '',
           mediaIds: a.mediaIds || [],
@@ -255,6 +258,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
           page: a.page || '',
           section: a.section || ''
         }));
+        this.albums = [this.getHeroFramesAlbum(), ...apiAlbums];
       },
       error: (err) => {
         console.error('Failed to load albums', err);
@@ -271,10 +275,50 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
     });
   }
 
+  private getHeroFramesAlbum(): Album {
+    return {
+      id: -1,
+      name: 'Hero Frames',
+      cover: '/assets/images/hero-frames/frame_001.jpg',
+      category: 'Hero',
+      photosCount: 192,
+      status: 'published',
+      description: 'Images par défaut pour le hero 1',
+      coverUrl: '/assets/images/hero-frames/frame_001.jpg',
+      mediaIds: [],
+      categoryId: 0,
+      page: 'home',
+      section: 'hero'
+    };
+  }
+
+  private getHeroFramesImages(): MediaItemLocal[] {
+    const images: MediaItemLocal[] = [];
+    for (let i = 1; i <= 192; i++) {
+      const padded = String(i).padStart(4, '0');
+      images.push({
+        id: -i,
+        title: `Hero Frame ${padded}`,
+        category: 'Hero',
+        type: 'Photo',
+        url: `/assets/images/hero-frames/frame_${padded}.jpg`,
+        date: new Date().toLocaleDateString('fr-FR'),
+        alt: `Hero Frame ${padded}`,
+        description: '',
+        keywords: [],
+        status: 'published',
+        albumId: -1,
+        albumName: 'Hero Frames',
+        albums: [{ id: -1, name: 'Hero Frames' }]
+      });
+    }
+    return images;
+  }
+
   private getAbsoluteUrl(url: string | null | undefined): string {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('//')) return 'https:' + url;
+     if (url.startsWith('//')) return (environment.apiUrl.startsWith('https') ? 'https:' : 'http:') + url;
     if (url.startsWith('/')) return environment.apiUrl.replace('/api', '') + url;
     return environment.apiUrl.replace('/api', '') + '/' + url;
   }
@@ -639,7 +683,8 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
       mediaIds: this.newAlbum.mediaIds || [],
       categoryId: this.newAlbum.categoryId || null,
       page: this.newAlbum.page || null,
-      section: this.newAlbum.section || null
+      section: this.newAlbum.section || null,
+      mediaUrls: this.newAlbum.mediaUrls || []
     };
 
     if (this.editingAlbumId) {
@@ -655,7 +700,8 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
             mediaIds: payload.mediaIds || a.mediaIds || [],
             categoryId: payload.categoryId ?? a.categoryId,
             page: payload.page || a.page || '',
-            section: payload.section || a.section || ''
+            section: payload.section || a.section || '',
+            mediaUrls: payload.mediaUrls || a.mediaUrls || []
           } : a);
           this.closeAddModal();
           this.showToastMessage('Album modifié avec succès', 'success');

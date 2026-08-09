@@ -14,7 +14,7 @@
 
         <div class="mp-sub-filters">
           @for (page of pages; track page.value) {
-            <button class="mp-sub-filter" [class.active]="selectedPage === page.value" (click)="selectedPage = page.value">
+            <button class="mp-sub-filter" [class.active]="selectedPage === page.value" (click)="setSelectedPage(page.value)">
               {{ page.label }}
             </button>
           }
@@ -30,9 +30,10 @@
                 </div>
                 <div class="mp-section-actions">
                   <div class="mp-view-toggle">
-                    <button class="mp-view-btn" title="Grille"><span class="material-symbols-outlined">grid_view</span></button>
-                    <button class="mp-view-btn" title="Liste"><span class="material-symbols-outlined">list</span></button>
-                    <button class="mp-view-btn active" title="Carrousel"><span class="material-symbols-outlined">view_carousel</span></button>
+                    <button class="mp-view-btn" title="Grille" [class.active]="isViewModeActive('grid')" (click)="setViewMode('grid')"><span class="material-symbols-outlined">grid_view</span></button>
+                    <button class="mp-view-btn" title="Liste" [class.active]="isViewModeActive('list')" (click)="setViewMode('list')"><span class="material-symbols-outlined">list</span></button>
+                    <button class="mp-view-btn active" title="Carrousel" [class.active]="isViewModeActive('carousel')" (click)="setViewMode('carousel')"><span class="material-symbols-outlined">view_carousel</span></button>
+                    <button class="mp-view-btn" title="Couverture" [class.active]="isViewModeActive('cover')" (click)="setViewMode('cover')"><span class="material-symbols-outlined">image</span></button>
                   </div>
                   <button class="mp-btn-add" (click)="openCreateModal(selectedPage, section.value)">
                     <span class="material-symbols-outlined">add</span>
@@ -54,7 +55,7 @@
                 <div class="mp-album-grid">
                   @for (album of pageAlbums; track album.id) {
                     <div class="mp-album-card" (click)="selectAlbum(album)" [class.selected]="selectedAlbum?.id === album.id">
-                      <div class="mp-album-thumb">
+                      <div class="mp-album-thumb" [style.background-image]="album.id === -1 ? 'url(/assets/images/hero-frames/frame_001.jpg)' : ''">
                         <img [src]="album.cover" [alt]="album.name" loading="lazy">
                         <div class="mp-album-overlay">
                           <span class="material-symbols-outlined">visibility</span>
@@ -65,14 +66,90 @@
                           <h4>{{ album.name }}</h4>
                           <p>{{ album.photosCount }} photo{{ album.photosCount > 1 ? 's' : '' }}</p>
                         </div>
-                        <span class="mp-album-tag hero">Hero</span>
+                        @if (album.id === -1) {
+                          <span class="mp-album-tag hero">Défaut</span>
+                        } @else {
+                          <span class="mp-album-tag hero">Hero</span>
+                        }
                       </div>
                     </div>
                   }
                 </div>
               }
 
-              @if (isAlbumDetailVisible(selectedPage, section.value)) {
+              @if (isCoverModeActive()) {
+                <div class="mp-cover-mode">
+                  <div class="mp-cover-header">
+                    <h4>Image de couverture - {{ selectedPage }}</h4>
+                    <select class="mp-cover-section-select" [(ngModel)]="selectedSection" (ngModelChange)="updateCoverImageKey()">
+                      @for (section of sections[selectedPage]; track section.value) {
+                        <option [value]="section.value">{{ section.label }}</option>
+                      }
+                    </select>
+                    <span class="mp-badge-label">{{ coverImageKey }}</span>
+                  </div>
+                  <div class="mp-cover-body">
+                    <div class="mp-cover-preview-large">
+                      @if (coverImagePreview) {
+                        <img [src]="coverImagePreview" alt="Cover">
+                      } @else {
+                        <div class="mp-cover-placeholder">
+                          <span class="material-symbols-outlined">image</span>
+                          <p>Aucune image de couverture</p>
+                        </div>
+                      }
+                    </div>
+                    <div class="mp-cover-actions">
+                      <div class="mp-form-group">
+                        <label>Source</label>
+                        <div class="mp-radio-group">
+                          <label class="mp-radio-label">
+                            <input type="radio" name="coverModeSource" value="url" [(ngModel)]="coverImageSource" [disabled]="isSubmitting">
+                            <span>URL</span>
+                          </label>
+                          <label class="mp-radio-label">
+                            <input type="radio" name="coverModeSource" value="file" [(ngModel)]="coverImageSource" [disabled]="isSubmitting">
+                            <span>Fichier</span>
+                          </label>
+                        </div>
+                      </div>
+                      @if (coverImageSource === 'url') {
+                        <div class="mp-form-group">
+                          <label for="coverUrl">URL de l'image</label>
+                          <input
+                            type="text"
+                            id="coverUrl"
+                            [(ngModel)]="coverImagePreview"
+                            placeholder="https://example.com/image.jpg"
+                            [disabled]="isSubmitting"
+                          />
+                        </div>
+                      } @else {
+                        <div class="mp-form-group">
+                          <label>Fichier</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            (change)="onCoverImageFileSelected($event)"
+                            [disabled]="isSubmitting"
+                          />
+                        </div>
+                      }
+                      <div class="mp-cover-buttons">
+                        <button class="mp-btn-add" (click)="saveCoverImage()" [disabled]="!coverImagePreview || isSubmitting">
+                          <span class="material-symbols-outlined">save</span>
+                          Enregistrer
+                        </button>
+                        @if (currentCoverImage) {
+                          <button class="mp-icon-btn danger" (click)="removeCoverImage()" [disabled]="isSubmitting" title="Supprimer">
+                            <span class="material-symbols-outlined">delete</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              } @else if (isAlbumDetailVisible(selectedPage, section.value)) {
                 <div class="mp-album-detail">
                   <div class="mp-album-detail-header">
                     <div class="mp-album-detail-title">
