@@ -9,4 +9,7 @@ class AlbumCreateRequest
     public ?string $coverUrl;
     public int $mediaId;
     public int $categoryId;
+    public ?string $page;
+    public ?string $section;
+    public array $mediaUrls;
 }

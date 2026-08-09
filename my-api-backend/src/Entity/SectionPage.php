@@ -15,6 +15,12 @@ class SectionPage
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    private ?string $page = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $section = null;
+
+    #[ORM\Column(length: 255)]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -22,6 +28,9 @@ class SectionPage
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $content = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $imageUrl = null;
 
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $type = null;
@@ -41,6 +50,30 @@ class SectionPage
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getPage(): ?string
+    {
+        return $this->page;
+    }
+
+    public function setPage(string $page): static
+    {
+        $this->page = $page;
+
+        return $this;
+    }
+
+    public function getSection(): ?string
+    {
+        return $this->section;
+    }
+
+    public function setSection(?string $section): static
+    {
+        $this->section = $section;
+
+        return $this;
     }
 
     public function getTitle(): ?string
@@ -75,6 +108,18 @@ class SectionPage
     public function setContent(?string $content): static
     {
         $this->content = $content;
+
+        return $this;
+    }
+
+    public function getImageUrl(): ?string
+    {
+        return $this->imageUrl;
+    }
+
+    public function setImageUrl(?string $imageUrl): static
+    {
+        $this->imageUrl = $imageUrl;
 
         return $this;
     }

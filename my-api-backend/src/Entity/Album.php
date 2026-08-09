@@ -22,6 +22,12 @@ class Album
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $page = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $section = null;
+
     #[ORM\ManyToOne(inversedBy: 'albums')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Medias $media = null;
@@ -69,6 +75,30 @@ class Album
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getPage(): ?string
+    {
+        return $this->page;
+    }
+
+    public function setPage(?string $page): static
+    {
+        $this->page = $page;
+
+        return $this;
+    }
+
+    public function getSection(): ?string
+    {
+        return $this->section;
+    }
+
+    public function setSection(?string $section): static
+    {
+        $this->section = $section;
 
         return $this;
     }
