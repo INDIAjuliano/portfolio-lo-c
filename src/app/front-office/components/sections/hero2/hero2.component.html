@@ -1,4 +1,4 @@
-<div class="hero2-loader-wrapper" id="hero2-loaderWrapper">
+<div class="hero2-loader-wrapper hidden" id="hero2-loaderWrapper">
   <div class="hero2-loader-overlay" id="hero2-loaderOverlay"></div>
   <div class="hero2-curtain-container" id="hero2-curtainContainer">
     <div class="hero2-curtain-panel"><div class="hero2-curtain-panel-inner"></div></div>
@@ -18,8 +18,8 @@
     <div class="hero2-curtain-panel hero2-u-hide-t"><div class="hero2-curtain-panel-inner"></div></div>
   </div>
   <div class="hero2-loader-brand" id="hero2-loaderBrand">
-    <h1>LOÏC</h1>
-    <p>PHOTOGRAPHY</p>
+    <h1>{{ sectionPage?.title || 'LOÏC' }}</h1>
+    <p>{{ sectionPage?.content || 'PHOTOGRAPHY' }}</p>
   </div>
   <div class="hero2-loader-progress" id="hero2-loaderProgress">
     <div class="hero2-loader-progress-fill" id="hero2-loaderProgressFill"></div>
@@ -32,8 +32,8 @@
   <div class="hero2-overlay" id="hero2-overlay"></div>
 
   <div class="hero2-content" id="hero2-content">
-    <h1 class="hero2-title">LOÏC</h1>
-    <p class="hero2-subtitle">"Immerse yourself in a visual journey where reality meets the imaginary."</p>
+    <h1 class="hero2-title">{{ sectionPage?.title || 'LOÏC' }}</h1>
+    <p class="hero2-subtitle">{{ sectionPage?.description || '"Immerse yourself in a visual journey where reality meets the imaginary."' }}</p>
   </div>
 
   <div class="scroll-indicator" id="hero2-scroll-indicator" #hero2ScrollIndicator>

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../icon/icon.component';
 import { MediaStateService } from '../../../../core/services/media-state.service';
+import { ContentService } from '../../../../core/services/content.service';
 import { environment } from '../../../../../environments/environment';
 import { merge, Subject, takeUntil } from 'rxjs';
 
@@ -26,6 +27,7 @@ export class PortfolioComponent implements OnInit {
   portfolioItems: PortfolioItem[] = [];
   isLoading = true;
   displayItems: PortfolioItem[] = [];
+  sectionPage: any = null;
 
   private defaultItems: PortfolioItem[] = [
     {
@@ -56,7 +58,7 @@ export class PortfolioComponent implements OnInit {
   ];
 
   private destroy$ = new Subject<void>();
-  constructor(private mediaStateService: MediaStateService) {}
+  constructor(private mediaStateService: MediaStateService, private contentService: ContentService) {}
 
   ngOnInit(): void {
     this.mediaStateService.loadAll().subscribe({
@@ -67,6 +69,15 @@ export class PortfolioComponent implements OnInit {
 
     merge(this.mediaStateService.albums$, this.mediaStateService.media$).pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.loadPortfolioImages();
+    });
+
+    this.contentService.getSectionPages(PORTFOLIO_PAGE, PORTFOLIO_SECTION).subscribe({
+      next: (pages) => {
+        this.sectionPage = pages[0] || null;
+      },
+      error: () => {
+        this.sectionPage = null;
+      }
     });
   }
 

@@ -10,6 +10,9 @@
       <p>
         {{ sectionPage?.description || 'I am a professional photographer specializing in capturing authentic moments that tell compelling stories. With over 10 years of experience, I bring a refined artistic vision to every shoot—whether it is a wedding, a corporate event, or a personal portrait session. My approach combines technical precision with creative intuition to deliver images that feel both timeless and emotionally resonant.' }}
       </p>
+      @if (sectionPage?.content; as content) {
+        <p [innerHTML]="content"></p>
+      }
       <button class="btn-primary">
         View More
         <app-icon name="arrow_right_alt" size="20"></app-icon>

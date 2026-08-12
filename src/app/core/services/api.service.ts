@@ -247,19 +247,20 @@ export class ApiService {
   }
 
   getPublishedAlbums(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published`, { headers: this.getAuthHeaders() }).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published`).pipe(
       catchError(this.handleError)
     );
   }
 
   getPublishedAlbumsByPage(page: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published?page=${encodeURIComponent(page)}`, { headers: this.getAuthHeaders() }).pipe(
+    const url = `${this.apiUrl}/public/albums/published?page=${encodeURIComponent(page)}`;
+    return this.http.get<any[]>(url).pipe(
       catchError(this.handleError)
     );
   }
 
   getPublishedAlbumsByPageAndSection(page: string, section: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published?page=${encodeURIComponent(page)}&section=${encodeURIComponent(section)}`, { headers: this.getAuthHeaders() }).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/public/albums/published?page=${encodeURIComponent(page)}&section=${encodeURIComponent(section)}`).pipe(
       catchError(this.handleError)
     );
   }

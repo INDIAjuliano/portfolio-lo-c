@@ -12,6 +12,9 @@ import { PassionComponent } from '../../components/sections/passion/passion.comp
 import { OfferComponent } from '../../components/sections/offer/offer.component';
 import { LogoScrollerComponent } from '../../components/sections/logo-scroller/logo-scroller.component';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LoaderService } from '../../../core/services/loader.service';
+import { ContentService } from '../../../core/services/content.service';
+import { MediaStateService } from '../../../core/services/media-state.service';
 
 @Component({
   selector: 'app-home',
@@ -38,7 +41,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   showHero2: boolean = false;
   private sub = new Subscription();
 
-  constructor(private themeService: ThemeService) {
+  constructor(
+    private themeService: ThemeService,
+    private loaderService: LoaderService,
+    private contentService: ContentService,
+    private mediaStateService: MediaStateService
+  ) {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       const forceHero = url.searchParams.get('hero');
@@ -64,6 +72,15 @@ export class HomeComponent implements OnInit, OnDestroy {
         console.log('subscribe showHero:', this.showHero, '| showHero2:', this.showHero2);
       })
     );
+
+    this.mediaStateService.loadAll().subscribe({
+      next: () => {
+        console.log('media loaded');
+      },
+      error: () => {
+        console.log('media load error');
+      }
+    });
   }
 
   ngOnDestroy(): void {

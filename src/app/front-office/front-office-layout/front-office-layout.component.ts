@@ -1,7 +1,8 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 
 // Components
 import { HeaderComponent } from '../components/header/header.component';
@@ -13,6 +14,7 @@ import { MobileMenuComponent } from '../components/mobile-menu/mobile-menu.compo
 import { ThemeService } from '../../core/services/theme.service';
 import { ScrollService } from '../../core/services/scroll.service';
 import { MenuService } from '../../core/services/menu.service';
+import { LoaderService } from '../../core/services/loader.service';
 
 @Component({
   selector: 'app-front-office-layout',
@@ -29,24 +31,34 @@ import { MenuService } from '../../core/services/menu.service';
   styleUrls: ['./front-office-layout.component.css']
 })
 export class FrontOfficeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(LoaderComponent) loaderComponent!: LoaderComponent;
   showLoader = true;
   private initialTimer: any = null;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private themeService: ThemeService,
     private scrollService: ScrollService,
     public menuService: MenuService,
-    private router: Router
+    private router: Router,
+    private loaderService: LoaderService
   ) { }
 
   ngOnInit(): void {
     this.themeService.initTheme();
+
+    this.loaderService.dismiss$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      if (this.loaderComponent && !this.loaderComponent['isDismissed']) {
+        this.loaderComponent.dismiss();
+      }
+    });
   }
 
   ngAfterViewInit(): void {
     if (typeof document === 'undefined') return;
 
-    if (this.showLoader) {
+    if (this.showLoader && this.loaderComponent) {
+      this.loaderComponent.startProgress();
       this.initialTimer = setTimeout(() => {
         this.scrollService.initScrollReveal();
         this.scrollService.initGSAPAnimations();
@@ -56,7 +68,8 @@ export class FrontOfficeLayoutComponent implements OnInit, AfterViewInit, OnDest
     }
 
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
     ).subscribe((event: any) => {
       if (event.urlAfterRedirects === '/' || event.urlAfterRedirects === '') {
         clearTimeout(this.initialTimer);
@@ -84,7 +97,15 @@ export class FrontOfficeLayoutComponent implements OnInit, AfterViewInit, OnDest
     this.refreshHomeAnimations();
   }
 
+  onLoaderReady(): void {
+    if (this.loaderComponent && !this.loaderComponent['isDismissed']) {
+      this.loaderComponent.dismiss();
+    }
+  }
+
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.initialTimer) {
       clearTimeout(this.initialTimer);
     }

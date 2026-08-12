@@ -2,8 +2,12 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild, Hos
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ContentService } from '../../../../core/services/content.service';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const HERO_PAGE = 'home';
+const HERO_SECTION = 'hero';
 
 @Component({
   selector: 'app-hero',
@@ -45,9 +49,13 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
   private loaderDismissTimer: any = null;
   private pass1Done = 0;
   private pass1Count = 0;
+  sectionPage: any = null;
+
+  constructor(private contentService: ContentService) {}
 
   ngOnInit(): void {
     if (typeof window === 'undefined') return;
+    this.loadSectionText();
   }
 
   private loaderDismissedHandler = () => {
@@ -78,6 +86,17 @@ export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dismissLoader();
       }
     }, 15000);
+  }
+
+  private loadSectionText(): void {
+    this.contentService.getSectionPages(HERO_PAGE, HERO_SECTION).subscribe({
+      next: (pages: any) => {
+        this.sectionPage = pages[0] || null;
+      },
+      error: () => {
+        this.sectionPage = null;
+      }
+    });
   }
 
   ngOnDestroy(): void {

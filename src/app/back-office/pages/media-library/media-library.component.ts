@@ -238,6 +238,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
       } else {
         this.currentAlbumId = null;
       }
+      this.updateImageCache();
     });
 
     this.loadSectionPages();
@@ -501,6 +502,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   clearAlbumSelection(): void {
     this.selectedAlbumId = null;
     this.currentAlbumId = null;
+    this.currentFilter = 'all';
     this.albumMediaTypeFilter = 'all';
     this.currentPage = 1;
     this.updateImageCache();
@@ -621,6 +623,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
           this.mediaStateService.removeAlbum(id!);
           if (this.selectedAlbumId === id) {
             this.selectedAlbumId = null;
+            this.updateImageCache();
           }
           this.showToast = true;
           this.toastMessage = 'Album supprimé avec succès';

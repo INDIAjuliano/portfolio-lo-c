@@ -1,8 +1,15 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { MediaStateService } from '../../../../core/services/media-state.service';
+import { ContentService, ContentSectionPage } from '../../../../core/services/content.service';
+import { environment } from '../../../../../environments/environment';
+import { merge, Subject, takeUntil } from 'rxjs';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const HERO2_PAGE = 'home';
+const HERO2_SECTION = 'hero2';
 
 @Component({
   selector: 'app-hero2',
@@ -11,7 +18,7 @@ gsap.registerPlugin(ScrollTrigger);
   templateUrl: './hero2.component.html',
   styleUrl: './hero2.component.css'
 })
-export class Hero2Component implements OnInit, OnDestroy {
+export class Hero2Component implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hero2Canvas') hero2CanvasRef!: ElementRef<HTMLCanvasElement>;
 
   private renderer: MorphRenderer | null = null;
@@ -19,23 +26,53 @@ export class Hero2Component implements OnInit, OnDestroy {
   private slideInterval: any;
   private isTransitioning = false;
   private destroyed = false;
+  private destroy$ = new Subject<void>();
+  private lastSlideImagesKey = '';
 
-  private readonly slideImages = [
+  private readonly defaultSlideImages = [
     'https://lh3.googleusercontent.com/aida-public/AB6AXuBfvtw81gJIlBNNsilQgp43_PExsCFPAZPLGiLGo28pM5yM1gT0HgVeSobDbDZT39xdp0eu9QT7ujYAvcel-ypfbBOJ0Yaesh3YoT4mRNRRN5_04dfc6eGgfxJKDiaL-_FzZprHlmkwrFHsxGywo-24h_Qt6Oam_MAaOAPbalj5BRiJhhE3sajoLDlW6fmgUaiFBr4pspDf7FPOO52TUDhgvGxSH8eDd-yGZF8KDCri1aeOI672UnPE',
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAtwh-yTiMGrGHQFWwYI9yXYGIXolAUSnpn_o7ZqdM9grAZCE72GTAv8_uHNEOr02y8Pn_55umWCB_yrsRa0OO2pqyRtWvtQDomDCTmKtauld3AJOMgn9GhgVexyLDQGyAFMomwF5Dx6RL7hAO-um0QEPKfmArTcLbqhP1M9h1t9x-Dok0R1BmFJvtyo5b1pzgKJT62M2J3I7QZq964-SSglgYRCYebWxkEXD_BUAnS_mwlgcIYTQdu',
     'https://lh3.googleusercontent.com/aida-public/AB6AXuBzdR-cEKxuAmS0_ioeHhSSAnFG6nTpGNmmmmSBPcAhNRa4Wu08p-T2HAhXjtYV0dRzRChjqa6PF_lvfilCLhuQR-j3VPL2r8zikb7pGlUBzNKXYI8YqhajEYI6NQ2sTEmquXyeOknmoZu3ZKMFAHMnHH3MV6gg7-xO5_bDOnEwGh7zokP3qNrRX3S7xWmGCpPrY4hxiAGwg635hLR34QOQb9qD698c5-qfVOGA_AAuKDV9uNWKXjQK',
     'https://lh3.googleusercontent.com/aida-public/AB6AXuC4Pqzv-htMPtL7l9C-wKhr4h8r_AkhPUpS4ywa3it7ZlpjyLQ9_-Jt1rqxaPWhgB27Cajy5ZQD5US9Wxs4_cbYDLZbHKq8xUmohvvgjCvFnVMpKfbTCJt0IF8nfqyuK8Jf0yzhp6mMA8XDd-R1_ZPnAbcPu1gPxIkwQTrtyW0JZGtWDec1LIHjuGdYvk2KLuz22qSlbmieYlK8_k9pIMKg_RJq8koEAdO4Qthnw5TFUpq7YHVISCsq'
   ];
 
+  private slideImages: string[] = [];
+
+  sectionPage: ContentSectionPage | null = null;
+
+  constructor(private mediaStateService: MediaStateService, private contentService: ContentService) {}
+
   ngOnInit(): void {
     this.buildDotsAndThumbs();
-    this.initLoader();
+    if (!document.querySelector('app-loader')) {
+      this.initLoader();
+    }
     this.initScrollAnimations();
     this.initKeyboardNav();
+    this.initBackOfficeBinding();
+    this.loadSectionText();
+  }
+
+  private loaderDismissedHandler?: () => void;
+
+  ngAfterViewInit(): void {
+    if (document.querySelector('app-loader')) {
+      this.loaderDismissedHandler = () => {
+        const heroContent = document.getElementById('hero2-content');
+        const scrollIndicator = document.getElementById('hero2-scroll-indicator');
+        if (heroContent) heroContent.classList.add('visible');
+        if (scrollIndicator) scrollIndicator.classList.add('visible');
+        this.startMorphRenderer();
+        this.resetInterval();
+      };
+      window.addEventListener('loaderDismissed', this.loaderDismissedHandler);
+    }
   }
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
     }
@@ -44,6 +81,9 @@ export class Hero2Component implements OnInit, OnDestroy {
       this.renderer = null;
     }
     ScrollTrigger.getAll().forEach(st => st.kill());
+    if (this.loaderDismissedHandler) {
+      window.removeEventListener('loaderDismissed', this.loaderDismissedHandler);
+    }
   }
 
   @HostListener('window:resize')
@@ -122,6 +162,9 @@ export class Hero2Component implements OnInit, OnDestroy {
 
   private initLoader(): void {
     const loaderWrapper = document.getElementById('hero2-loaderWrapper');
+    if (loaderWrapper) {
+      loaderWrapper.classList.remove('hidden');
+    }
     const panels = document.querySelectorAll('.hero2-curtain-panel');
     const curtainContainer = document.getElementById('hero2-curtainContainer');
     const loaderOverlay = document.getElementById('hero2-loaderOverlay');
@@ -310,6 +353,98 @@ export class Hero2Component implements OnInit, OnDestroy {
       if (e.key === 'ArrowLeft') this.prevSlide();
       if (e.key === 'ArrowRight') this.nextSlide();
     });
+  }
+
+  private initBackOfficeBinding(): void {
+    this.mediaStateService.loadAll().subscribe({
+      next: () => {
+        this.loadSlideImages();
+      }
+    });
+
+    merge(this.mediaStateService.albums$, this.mediaStateService.media$)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadSlideImages();
+      });
+  }
+
+  private loadSectionText(): void {
+    this.contentService.getSectionPages(HERO2_PAGE, HERO2_SECTION).subscribe({
+      next: (pages) => {
+        this.sectionPage = pages[0] || null;
+      },
+      error: () => {
+        this.sectionPage = null;
+      }
+    });
+  }
+
+  private loadSlideImages(): void {
+    const album = this.mediaStateService.currentAlbums.find(
+      (a: any) => a.page === HERO2_PAGE && a.section === HERO2_SECTION && a.isPublished
+    );
+
+    let newImages: string[] = [];
+
+    if (album && album.mediaIds && album.mediaIds.length > 0) {
+      const mediaItems = this.mediaStateService.currentMedia.filter((m: any) =>
+        album.mediaIds.includes(m.id)
+      );
+      newImages = mediaItems
+        .filter((m: any) => m.type === 'image' && (m.url || m.imageUrl))
+        .map((m: any) => this.getAbsoluteUrl(m.url || m.imageUrl));
+    }
+
+    if (newImages.length === 0) {
+      newImages = [...this.defaultSlideImages];
+    }
+
+    const newKey = JSON.stringify(newImages);
+    if (newKey !== this.lastSlideImagesKey) {
+      this.lastSlideImagesKey = newKey;
+      this.slideImages = newImages;
+
+      if (this.renderer && this.slideImages.length > 0) {
+        this.renderer.destroy();
+        this.renderer = null;
+        if (this.slideInterval) {
+          clearInterval(this.slideInterval);
+        }
+        this.currentSlide = 0;
+        this.isTransitioning = false;
+
+        const dotsContainer = document.getElementById('hero2-dots');
+        const thumbsContainer = document.getElementById('hero2-thumbs');
+        if (dotsContainer) dotsContainer.innerHTML = '';
+        if (thumbsContainer) thumbsContainer.innerHTML = '';
+
+        this.buildDotsAndThumbs();
+
+        const loaderWrapper = document.getElementById('hero2-loaderWrapper');
+        const heroContent = document.getElementById('hero2-content');
+        const scrollIndicator = document.getElementById('hero2-scroll-indicator');
+
+        if (loaderWrapper && !loaderWrapper.classList.contains('hidden')) {
+          this.startMorphRenderer();
+        } else {
+          this.startMorphRenderer();
+        }
+        if (heroContent) heroContent.classList.add('visible');
+        if (scrollIndicator) scrollIndicator.classList.add('visible');
+        this.resetInterval();
+      }
+    }
+  }
+
+  private getAbsoluteUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('//')) {
+      return (environment.apiUrl.startsWith('https') ? 'https:' : 'http:') + url;
+    }
+    if (url.startsWith('/')) return environment.apiUrl.replace('/api', '') + url;
+    return environment.apiUrl.replace('/api', '') + '/' + url;
   }
 }
 

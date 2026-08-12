@@ -38,8 +38,8 @@ export class MediaStateService {
   loadAll(): Observable<void> {
     this.loadingSubject.next(true);
     return forkJoin({
-      media: this.apiService.getMedia().pipe(catchError(() => of([]))),
-      albums: this.apiService.getAlbums().pipe(catchError(() => of([]))),
+      media: this.apiService.getPublicMedia().pipe(catchError(() => of([]))),
+      albums: this.apiService.getPublishedAlbums().pipe(catchError(() => of([]))),
       categories: this.apiService.getCategories().pipe(catchError(() => of([])))
     }).pipe(
       map(({ media, albums, categories }) => {

@@ -17,9 +17,11 @@
           </div>
 
           <div class="ml-filter-tabs">
-            <button class="ml-filter-tab" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">Tout</button>
+            <button class="ml-filter-tab" [class.active]="!selectedAlbum" (click)="clearAlbumSelection()">Tout</button>
             @for (album of albums; track album.id) {
-              <button class="ml-filter-tab" [class.active]="currentFilter === album.name" (click)="setFilter(album.name)">{{ album.name }}</button>
+              @if (album.id !== -1) {
+                <button class="ml-filter-tab" [class.active]="selectedAlbumId === album.id" (click)="selectAlbum(album.id)">{{ album.name }}</button>
+              }
             }
           </div>
 

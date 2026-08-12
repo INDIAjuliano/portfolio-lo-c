@@ -1,6 +1,6 @@
 <!-- LOADER -->
 @if (showLoader) {
-  <app-loader (dismissed)="onLoaderDismissed()"></app-loader>
+  <app-loader (dismissed)="onLoaderDismissed()" (ready)="onLoaderReady()"></app-loader>
 }
 
 <!-- MOBILE MENU OVERLAY -->
@@ -8,12 +8,12 @@
 <app-mobile-menu></app-mobile-menu>
 
 <!-- HEADER -->
-<app-header></app-header>
+<app-header [class.loading]="showLoader"></app-header>
 
 <!-- MAIN CONTENT -->
-<main>
+<main [class.loading]="showLoader">
   <router-outlet></router-outlet>
 </main>
 
 <!-- FOOTER -->
-<app-footer></app-footer>
+<app-footer [class.loading]="showLoader"></app-footer>

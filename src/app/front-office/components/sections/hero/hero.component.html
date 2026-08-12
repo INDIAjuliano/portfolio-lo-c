@@ -68,8 +68,8 @@
 
     <div #heroText id="hero-text">
       <div class="hero-text-inner">
-        <p class="h-eyebrow">LOÏC Photography</p>
-        <p class="h-sub">Photography is the art of seeing the extraordinary and capturing the beauty others overlook</p>
+        <p class="h-eyebrow">{{ sectionPage?.title || 'LOÏC Photography' }}</p>
+        <p class="h-sub">{{ sectionPage?.description || 'Photography is the art of seeing the extraordinary and capturing the beauty others overlook' }}</p>
         <div class="h-cta-row">
           <a href="#portfolio" class="btn-fill">Explore Portfolio</a>
           <a href="#about" class="btn-ghost">Discover the story</a>
@@ -78,12 +78,12 @@
     </div>
 
     <div #heroRevealText class="hero-reveal-text">
-      <div #revealInner class="reveal-inner"><span class="highlight">LOÏC</span> Photography</div>
+      <div #revealInner class="reveal-inner"><span class="highlight">{{ sectionPage?.title || 'LOÏC' }}</span> Photography</div>
     </div>
 
     <div id="welcome-text" class="welcome-text">
-      <span class="welcome-line">Well come</span>
-      <span class="welcome-line">to my world</span>
+      <span class="welcome-line">{{ sectionPage?.content?.split('\n')[0] || 'Well come' }}</span>
+      <span class="welcome-line">{{ sectionPage?.content?.split('\n')[1] || 'to my world' }}</span>
     </div>
 
     <div id="scrub-progress"><div #scrubBar id="scrub-bar"></div></div>

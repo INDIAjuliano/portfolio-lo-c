@@ -6,7 +6,7 @@ export class ThemeService {
   private isDarkSubject = new BehaviorSubject<boolean>(false);
   isDark$ = this.isDarkSubject.asObservable();
 
-  private heroVariantSubject = new BehaviorSubject<'hero1' | 'hero2'>('hero1');
+  private heroVariantSubject = new BehaviorSubject<'hero1' | 'hero2'>('hero2');
   heroVariant$ = this.heroVariantSubject.asObservable();
 
   constructor() {

@@ -81,13 +81,13 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     this.allGalleryData = [];
     this.galleryData = [];
 
-    this.contentService.getPublicMediaPage(1, PAGE_SIZE).subscribe({
+    this.contentService.getPublicMedia().subscribe({
       next: (media: any[]) => {
-        const mapped = media.map((m: any) => this.mapGalleryItem(m));
+        const mapped = media.map((m: any) => this.mapGalleryItem(m)).filter(Boolean);
         this.allGalleryData = mapped;
         this.galleryData = mapped;
         this.categories = Array.from(new Set(this.galleryData.map(item => item.category))).sort();
-        this.hasMore = media.length >= PAGE_SIZE;
+        this.hasMore = false;
         this.isLoading = false;
         this.currentPage = 2;
         setTimeout(() => this.animateGalleryItems(), 50);
@@ -128,7 +128,7 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     const height = m.height || m.imageHeight || 0;
     const albumPage = m.albumPage || (m.albums && m.albums[0]?.page) || '';
     const albumSection = m.albumSection || (m.albums && m.albums[0]?.section) || '';
-    if (albumPage === 'home' && albumSection === 'partners') {
+    if (albumPage === 'home' && ['partners', 'hero', 'hero2'].includes(albumSection)) {
       return null as any;
     }
     return {
