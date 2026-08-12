@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../front-office/components/icon/icon.component';
 import { ApiService, Category } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { MediaStateService } from '../../../core/services/media-state.service';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-categories',
@@ -13,7 +15,7 @@ import { Router } from '@angular/router';
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.css'
 })
-export class CategoriesComponent implements OnInit {
+export class CategoriesComponent implements OnInit, OnDestroy {
   categories: Category[] = [];
   isLoading = false;
   errorMessage: string | null = null;
@@ -28,14 +30,37 @@ export class CategoriesComponent implements OnInit {
     icon: ''
   };
 
-  constructor(private apiService: ApiService, private authService: AuthService, private router: Router) {}
+  private destroy$ = new Subject<void>();
+  private apiService = inject(ApiService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private mediaStateService = inject(MediaStateService);
 
   ngOnInit(): void {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
       return;
     }
-    this.loadCategories();
+
+    this.mediaStateService.categories$.pipe(takeUntil(this.destroy$)).subscribe((categories: Category[]) => {
+      this.categories = categories || [];
+      this.isLoading = false;
+    });
+
+    this.mediaStateService.loadAll().subscribe({
+      next: () => {
+        this.isLoading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Impossible de charger les catégories.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadCategories(): void {
@@ -49,12 +74,12 @@ export class CategoriesComponent implements OnInit {
       return;
     }
 
-    this.apiService.getCategories().subscribe({
-      next: (data) => {
-        this.categories = data || [];
+    this.mediaStateService.loadAll().subscribe({
+      next: () => {
+        this.categories = this.mediaStateService.currentCategories || [];
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         const status = err?.status;
         const message = err?.error?.message || err?.message || 'Erreur inconnue';
         if (status === 401) {
@@ -103,18 +128,18 @@ export class CategoriesComponent implements OnInit {
     if (this.isEditing && this.editingId) {
       this.apiService.updateCategory(this.editingId, payload).subscribe({
         next: () => {
-          this.loadCategories();
+          this.mediaStateService.loadAll().subscribe();
           this.closeModal();
         },
-        error: (err) => alert('Erreur lors de la modification: ' + (err.error?.message || err.message))
+        error: (err: any) => alert('Erreur lors de la modification: ' + (err.error?.message || err.message))
       });
     } else {
       this.apiService.createCategory(payload).subscribe({
         next: () => {
-          this.loadCategories();
+          this.mediaStateService.loadAll().subscribe();
           this.closeModal();
         },
-        error: (err) => alert('Erreur lors de la création: ' + (err.error?.message || err.message))
+        error: (err: any) => alert('Erreur lors de la création: ' + (err.error?.message || err.message))
       });
     }
   }
@@ -122,8 +147,10 @@ export class CategoriesComponent implements OnInit {
   deleteCategory(id: number, name: string): void {
     if (!confirm(`Supprimer la catégorie "${name}" ?`)) return;
     this.apiService.deleteCategory(id).subscribe({
-      next: () => this.loadCategories(),
-      error: (err) => alert('Erreur lors de la suppression: ' + (err.error?.message || err.message))
+      next: () => {
+        this.mediaStateService.loadAll().subscribe();
+      },
+      error: (err: any) => alert('Erreur lors de la suppression: ' + (err.error?.message || err.message))
     });
   }
 }

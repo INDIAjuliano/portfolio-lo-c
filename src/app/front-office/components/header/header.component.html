@@ -1,8 +1,12 @@
 <header class="navbar" id="navbar" #navbar>
   <div class="navbar-inner">
     <a routerLink="/" class="logo-wrapper" [class.scrolled]="isScrolled" #logoWrapper>
-      <span class="logo-main">LOÏC</span>
-      <span class="logo-sub">Photography</span>
+      @if (siteLogo) {
+        <img [src]="siteLogo" [alt]="siteLogoAlt" class="header-logo">
+      } @else {
+        <span class="logo-main">LOÏC</span>
+        <span class="logo-sub">Photography</span>
+      }
     </a>
 
     <button class="hamburger" [class.active]="menuService.isOpen" (click)="toggleMenu()" aria-label="Menu">

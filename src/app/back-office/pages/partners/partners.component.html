@@ -1,0 +1,148 @@
+<div class="partners-app">
+  <div class="partners-header">
+    <div>
+      <h2>Partenaires</h2>
+      <p>Gérez les logos et les liens des partenaires affichés dans le logo scroller.</p>
+    </div>
+    <button class="btn-primary" (click)="openCreateModal()">
+      <span class="material-symbols-outlined">add</span>
+      Ajouter un partenaire
+    </button>
+  </div>
+
+  @if (errorMessage) {
+    <div class="partners-error">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="partners-loading">Chargement...</div>
+  }
+
+  @if (!isLoading && partners.length === 0) {
+    <div class="partners-empty">
+      Aucun partenaire pour l'instant.
+    </div>
+  }
+
+  @if (!isLoading && partners.length > 0) {
+    <div class="partners-table-wrap">
+      <table class="partners-table">
+        <thead>
+          <tr>
+            <th>Logo</th>
+            <th>Nom</th>
+            <th>Description</th>
+            <th>Lien</th>
+            <th>Position</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (partner of partners; track partner.id) {
+            <tr>
+              <td>
+                <img [src]="partner.logoUrl" alt="{{ partner.name }}" class="partner-logo">
+              </td>
+              <td>{{ partner.name }}</td>
+              <td>{{ partner.description }}</td>
+              <td>
+                @if (partner.linkUrl) {
+                  <a [href]="partner.linkUrl" target="_blank" rel="noopener noreferrer">Lien</a>
+                } @else {
+                  <span class="text-muted">-</span>
+                }
+              </td>
+              <td>{{ partner.position }}</td>
+            <td>
+              <span class="badge" [class.badge-success]="partner.isPublished" [class.badge-secondary]="!partner.isPublished">
+                {{ partner.isPublished ? 'Publié' : 'Brouillon' }}
+              </span>
+            </td>
+              <td>
+                <span class="badge" [class.badge-warning]="partner.isSiteLogo" [class.badge-secondary]="!partner.isSiteLogo">
+                  {{ partner.isSiteLogo ? 'Logo site' : '-' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn-icon" (click)="togglePublish(partner.id, partner.isPublished)">
+                    <span class="material-symbols-outlined">
+                      {{ partner.isPublished ? 'visibility_off' : 'visibility' }}
+                    </span>
+                  </button>
+                  <button class="btn-icon" (click)="toggleSiteLogo(partner.id, partner.isSiteLogo)">
+                    <span class="material-symbols-outlined">
+                      {{ partner.isSiteLogo ? 'star' : 'star_border' }}
+                    </span>
+                  </button>
+                  <button class="btn-icon" (click)="openEditModal(partner)">
+                    <span class="material-symbols-outlined">edit</span>
+                  </button>
+                  <button class="btn-icon danger" (click)="deletePartner(partner.id, partner.name)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (showModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ isEditing ? 'Modifier le partenaire' : 'Ajouter un partenaire' }}</h3>
+          <button class="modal-close" (click)="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" [(ngModel)]="formData.name" placeholder="Nom du partenaire">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="formData.description" placeholder="Description courte" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>URL du logo *</label>
+            <input type="text" [(ngModel)]="formData.logoUrl" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>URL du lien</label>
+            <input type="text" [(ngModel)]="formData.linkUrl" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>Position</label>
+            <input type="number" [(ngModel)]="formData.position">
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="formData.isPublished">
+              Publié
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="formData.isSiteLogo">
+              Utiliser comme logo du site
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeModal()">Annuler</button>
+          <button class="btn-primary" (click)="submitForm()">
+            {{ isEditing ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

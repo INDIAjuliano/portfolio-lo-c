@@ -72,6 +72,15 @@
   user-select: none;
 }
 
+.loader-logo {
+  max-width: min(260px, 60vw);
+  max-height: min(260px, 60vh);
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 40px rgba(0, 0, 0, 0.8));
+}
+
 .loader-brand h1 {
   font-family: 'Archivo Narrow', sans-serif;
   font-size: clamp(28px, 6vw, 64px);

@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, ElementRef, ViewChild, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
+import { ContentService } from '../../../core/services/content.service';
 
 @Component({
   selector: 'app-loader',
@@ -18,9 +19,29 @@ export class LoaderComponent implements AfterViewInit {
   @ViewChild('loaderProgressFill') loaderProgressFill!: ElementRef<HTMLDivElement>;
   @Output() dismissed = new EventEmitter<void>();
 
+  siteLogo: string | null = null;
+  siteLogoAlt = 'LOÏC Photography';
+
+  constructor(private contentService: ContentService) {}
+
   ngAfterViewInit(): void {
     if (typeof document === 'undefined') return;
+    this.loadSiteLogo();
     setTimeout(() => this.dismissLoader(), 2500);
+  }
+
+  private loadSiteLogo(): void {
+    this.contentService.getSiteLogo().subscribe({
+      next: (logo: any) => {
+        if (logo && logo.logoUrl) {
+          this.siteLogo = logo.logoUrl;
+          this.siteLogoAlt = logo.name || 'LOÏC Photography';
+        }
+      },
+      error: () => {
+        this.siteLogo = null;
+      }
+    });
   }
 
   dismissLoader(): void {

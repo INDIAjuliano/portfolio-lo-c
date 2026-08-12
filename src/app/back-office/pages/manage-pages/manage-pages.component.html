@@ -13,12 +13,128 @@
         </div>
 
         <div class="mp-sub-filters">
-          @for (page of pages; track page.value) {
-            <button class="mp-sub-filter" [class.active]="selectedPage === page.value" (click)="setSelectedPage(page.value)">
-              {{ page.label }}
+          <div class="mp-page-selector">
+            @for (page of pages; track page.value) {
+              <button class="mp-sub-filter" [class.active]="selectedPage === page.value" (click)="setSelectedPage(page.value)">
+                {{ page.label }}
+              </button>
+            }
+            <button class="mp-sub-filter mp-select-mode-btn" [class.active]="selectionMode" (click)="toggleSelectionMode()">
+              <span class="material-symbols-outlined">{{ selectionMode ? 'close' : 'select_multiple' }}</span>
+              Mode sélection
             </button>
-          }
+          </div>
         </div>
+
+        @if (selectionMode) {
+          <div class="mp-quick-assign-panel">
+            <div class="mp-qa-header">
+              <h3>Sélectionner et assigner aux sections</h3>
+              <span class="mp-qa-count">{{ selectedMediaCount }} image{{ selectedMediaCount > 1 ? 's' : '' }} sélectionnée{{ selectedMediaCount > 1 ? 's' : '' }}</span>
+            </div>
+
+            <div class="mp-qa-form-row">
+              @if (!multiAssignMode) {
+                <div class="mp-form-group">
+                  <label>Page *</label>
+                  <select [(ngModel)]="assignPage" (ngModelChange)="updateAssignSection()" [disabled]="isAssigning">
+                    @for (page of pages; track page.value) {
+                      <option [value]="page.value">{{ page.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="mp-form-group">
+                  <label>Section *</label>
+                  <select [(ngModel)]="assignSection" [disabled]="isAssigning">
+                    @for (section of assignSectionOptions; track section.value) {
+                      <option [value]="section.value">{{ section.label }}</option>
+                    }
+                  </select>
+                </div>
+              } @else {
+                <div class="mp-multi-section-picker">
+                  <label class="mp-multi-section-title">Sections cibles :</label>
+                  @for (page of pages; track page.value) {
+                    <div class="mp-multi-section-group">
+                      <div class="mp-multi-section-label">{{ page.label }}</div>
+                      <div class="mp-multi-section-options">
+                        @for (section of sections[page.value]; track section.value) {
+                          <label class="mp-multi-section-option" [class.selected]="isSectionSelectedForMultiAssign(page.value, section.value)">
+                            <input type="checkbox" [checked]="isSectionSelectedForMultiAssign(page.value, section.value)" (change)="toggleSectionForMultiAssign(page.value, section.value)" [disabled]="isAssigning">
+                            <span>{{ section.label }}</span>
+                          </label>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              @if (!multiAssignMode && assignExpectedCount !== null) {
+                <div class="mp-expected-count">
+                  <span class="material-symbols-outlined">info</span>
+                  Cette section requiert <strong>{{ assignExpectedCount }}</strong> photo{{ assignExpectedCount > 1 ? 's' : '' }}
+                  @if (selectedMediaCount > 0 && selectedMediaCount !== assignExpectedCount) {
+                    <span class="mp-count-warning">({{ selectedMediaCount }} sélectionnée{{ selectedMediaCount > 1 ? 's' : '' }})</span>
+                  }
+                </div>
+              }
+              <button class="mp-btn-toggle-mode" type="button" (click)="toggleMultiAssignMode()" [disabled]="isAssigning">
+                {{ multiAssignMode ? 'Mode single' : 'Mode multiple' }}
+              </button>
+            </div>
+
+            <div class="mp-media-pool">
+              @for (media of pagedMediaForSelection; track media.id) {
+                <div
+                  class="mp-media-thumb-assign"
+                  [class.selected]="isMediaSelected(media.id)"
+                  (click)="toggleMediaSelection(media.id)"
+                >
+                  <img [src]="getAbsoluteUrl(media.imageUrl || media.videoUrl)" [alt]="media.title" loading="lazy">
+                  <div class="mp-media-checkbox">
+                    <span class="material-symbols-outlined">{{ isMediaSelected(media.id) ? 'check_box' : 'check_box_outline_blank' }}</span>
+                  </div>
+                </div>
+              }
+              @if (isLoadingMoreMedia) {
+                <div class="mp-media-loader">
+                  <span class="material-symbols-outlined">progress_activity</span>
+                  Chargement...
+                </div>
+              }
+              @if (!hasMoreMedia && pagedMediaForSelection.length > 0) {
+                <div class="mp-media-end">Fin de la liste</div>
+              }
+            </div>
+            @if (mediaItems.length > mediaPageSize) {
+              <div class="mp-media-pagination">
+                <button class="mp-page-btn" (click)="prevMediaPage()" [disabled]="mediaCurrentPage === 1">
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <span class="mp-page-info">{{ mediaShowingCount }} / {{ mediaItems.length }}</span>
+                <button class="mp-page-btn" (click)="nextMediaPage()" [disabled]="mediaCurrentPage === mediaTotalPages">
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+            }
+
+            <div class="mp-qa-actions">
+              <button class="mp-btn-add" (click)="quickAssignImages()" [disabled]="isAssigning || selectedMediaCount === 0">
+                <span class="material-symbols-outlined">{{ isAssigning ? 'hourglass_empty' : 'assignment' }}</span>
+                {{ isAssigning ? 'Assignment...' : 'Assigner aux images de la section' }}
+              </button>
+              <button class="mp-btn-reset" (click)="resetAssignment()" [disabled]="isAssigning" title="Réinitialiser aux images par défaut">
+                <span class="material-symbols-outlined">restart_alt</span>
+                Reset
+              </button>
+              @if (selectedMediaCount > 0) {
+                <button class="mp-icon-btn" (click)="selectedMediaForAssign.clear(); selectionMode = false" [disabled]="isAssigning" title="Annuler">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
 
         <div class="mp-sections">
           @for (section of sections[selectedPage]; track section.value) {
@@ -278,9 +394,47 @@
               </div>
             }
           </div>
-        }
-        <div class="mp-form-group">
-          <label for="albumCategory">Catégorie *</label>
+         }
+
+         <div class="mp-form-group">
+           <label for="albumPage">Page *</label>
+           <select
+             id="albumPage"
+             [(ngModel)]="newAlbum.page"
+             [disabled]="isSubmitting"
+           >
+             @for (page of pages; track page.value) {
+               <option [value]="page.value">{{ page.label }}</option>
+             }
+           </select>
+         </div>
+
+         <div class="mp-form-group">
+           <label for="albumSection">Section *</label>
+           <select
+             id="albumSection"
+             [(ngModel)]="newAlbum.section"
+             [disabled]="isSubmitting || !newAlbum.page"
+           >
+             @if (sections[newAlbum.page]) {
+               @for (section of sections[newAlbum.page]; track section.value) {
+                 <option [value]="section.value">{{ section.label }}</option>
+               }
+             }
+           </select>
+           @let expectedCount = getExpectedImageCount(newAlbum.page || '', newAlbum.section || '');
+           @if (expectedCount !== null) {
+             <small class="mp-form-hint">
+               Cette section requiert <strong>{{ expectedCount }}</strong> photo{{ expectedCount > 1 ? 's' : '' }}
+               @if (newAlbum.mediaIds.length > 0 && newAlbum.mediaIds.length !== expectedCount) {
+                 <span style="color: #e74c3c;">({{ newAlbum.mediaIds.length }} sélectionné{{ newAlbum.mediaIds.length > 1 ? 's' : '' }})</span>
+               }
+             </small>
+           }
+         </div>
+
+         <div class="mp-form-group">
+           <label for="albumCategory">Catégorie *</label>
           <select
             id="albumCategory"
             [(ngModel)]="newAlbum.categoryId"

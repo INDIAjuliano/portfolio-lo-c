@@ -136,8 +136,8 @@
   aspect-ratio: 1;
   background: var(--bg-tertiary);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  opacity: 0;
-  transform: translateY(30px) scale(0.97);
+  opacity: 1;
+  transform: none;
 }
 
 .portfolio-item.visible {

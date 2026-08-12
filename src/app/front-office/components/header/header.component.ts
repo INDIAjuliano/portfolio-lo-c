@@ -4,6 +4,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service';
 import { MenuService } from '../../../core/services/menu.service';
+import { ContentService } from '../../../core/services/content.service';
 import { gsap } from 'gsap';
 import { IconComponent } from '../icon/icon.component';
 
@@ -17,19 +18,23 @@ import { IconComponent } from '../icon/icon.component';
 export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   isScrolled = false;
   isDark = false;
+  siteLogo: string | null = null;
+  siteLogoAlt = 'LOÏC Photography';
   private themeSubscription: Subscription | null = null;
   @ViewChild('navbar') navbar!: ElementRef<HTMLElement>;
   @ViewChild('logoWrapper') logoWrapper!: ElementRef<HTMLElement>;
 
   constructor(
     private themeService: ThemeService,
-    public menuService: MenuService
+    public menuService: MenuService,
+    private contentService: ContentService
   ) {}
 
   ngOnInit(): void {
     this.themeSubscription = this.themeService.isDark$.subscribe(
       isDark => this.isDark = isDark
     );
+    this.loadSiteLogo();
   }
 
   ngOnDestroy(): void {
@@ -48,6 +53,20 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('window:scroll', [])
   onWindowScroll(): void {
     this.isScrolled = window.scrollY > 80;
+  }
+
+  private loadSiteLogo(): void {
+    this.contentService.getSiteLogo().subscribe({
+      next: (logo: any) => {
+        if (logo && logo.logoUrl) {
+          this.siteLogo = logo.logoUrl;
+          this.siteLogoAlt = logo.name || 'LOÏC Photography';
+        }
+      },
+      error: () => {
+        this.siteLogo = null;
+      }
+    });
   }
 
   toggleMenu(): void {

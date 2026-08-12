@@ -4,6 +4,7 @@ import { MediaLibraryComponent } from './pages/media-library/media-library.compo
 import { AboutMeComponent } from './pages/about-me/about-me.component';
 import { ThemeComponent } from './pages/theme/theme.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
+import { PartnersComponent } from './pages/partners/partners.component';
 import { adminGuard } from '../core/guards/admin.guard';
 
 export const BACK_OFFICE_ROUTES: Routes = [
@@ -41,6 +42,11 @@ export const BACK_OFFICE_ROUTES: Routes = [
         path: 'categories',
         loadComponent: () => import('./pages/categories/categories.component')
           .then(m => m.CategoriesComponent)
+      },
+      {
+        path: 'partners',
+        loadComponent: () => import('./pages/partners/partners.component')
+          .then(m => m.PartnersComponent)
       }
     ]
   }

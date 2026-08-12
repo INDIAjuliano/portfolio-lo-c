@@ -126,6 +126,11 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     const largeUrl = this.getAbsoluteUrl(m.imageUrl || m.thumbnailUrl || '');
     const width = m.width || m.imageWidth || 0;
     const height = m.height || m.imageHeight || 0;
+    const albumPage = m.albumPage || (m.albums && m.albums[0]?.page) || '';
+    const albumSection = m.albumSection || (m.albums && m.albums[0]?.section) || '';
+    if (albumPage === 'home' && albumSection === 'partners') {
+      return null as any;
+    }
     return {
       id: m.id,
       title: m.title || 'Sans titre',
@@ -227,16 +232,17 @@ export class GallerySectionComponent implements AfterViewInit, OnDestroy {
     if (!items.length) return;
     items.forEach((item, i: number) => {
       const el = item as HTMLElement;
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(30px) scale(0.97)';
-      gsap.to(el, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.6,
-        ease: 'power2.out',
-        delay: i * 0.06
-      });
+      gsap.fromTo(el, 
+        { opacity: 0, y: 20, scale: 0.97 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+          delay: i * 0.04
+        }
+      );
     });
   }
 

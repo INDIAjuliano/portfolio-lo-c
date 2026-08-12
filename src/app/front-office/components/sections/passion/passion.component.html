@@ -1,22 +1,25 @@
 <section class="passion-grid">
-  <div class="passion-item dark">
-    <div class="bg-image" style="background-image: url('assets/images/home/home-passion-1.jpg')">
-    </div>
-    <div class="content">
-      <h3>Vision & Style</h3>
-      <p>Every frame is composed with intention—balancing light, emotion, and geometry to create images that feel both spontaneous and timeless.</p>
-    </div>
-  </div>
-
-  <div class="passion-item white">
-    <div class="bg-image" style="background-image: url('assets/images/home/home-passion-2.jpg')">
-    </div>
-    <div class="content">
-      <h3>The Craft</h3>
-      <p>
-        Photography is more than pressing a shutter. It is about understanding people, reading light, 
-        and anticipating the decisive moment to produce work that resonates for generations.
-      </p>
-    </div>
-  </div>
+  @for (img of passionImages; track $index) {
+    @if ($index === 0) {
+      <div class="passion-item dark">
+        <div class="bg-image" [style.backgroundImage]="'url(' + img + ')'"></div>
+        <div class="content">
+          <h3>{{ sectionPage?.title || 'Vision & Style' }}</h3>
+          <p>{{ sectionPage?.description || 'Every frame is composed with intention—balancing light, emotion, and geometry to create images that feel both spontaneous and timeless.' }}</p>
+        </div>
+      </div>
+    }
+    @if ($index === 1) {
+      <div class="passion-item white">
+        <div class="bg-image" [style.backgroundImage]="'url(' + img + ')'"></div>
+        <div class="content">
+          <h3>{{ sectionPage?.content || 'The Craft' }}</h3>
+          <p>
+            Photography is more than pressing a shutter. It is about understanding people, reading light, 
+            and anticipating the decisive moment to produce work that resonates for generations.
+          </p>
+        </div>
+      </div>
+    }
+  }
 </section>

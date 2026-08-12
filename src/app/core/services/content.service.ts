@@ -63,6 +63,16 @@ export interface ContentSectionPage {
   updatedAt?: string;
 }
 
+export interface ContentPartner {
+  id: number;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  linkUrl?: string;
+  position?: number;
+  isPublished: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -91,6 +101,30 @@ export class ContentService {
 
   getSectionPages(page?: string, section?: string): Observable<ContentSectionPage[]> {
     return this.apiService.getSectionPages(page, section);
+  }
+
+  getSectionPage(id: number): Observable<ContentSectionPage> {
+    return this.apiService.getSectionPage(id);
+  }
+
+  createSectionPage(data: Partial<ContentSectionPage>): Observable<ContentSectionPage> {
+    return this.apiService.createSectionPage(data);
+  }
+
+  updateSectionPage(id: number, data: Partial<ContentSectionPage>): Observable<ContentSectionPage> {
+    return this.apiService.updateSectionPage(id, data);
+  }
+
+  deleteSectionPage(id: number): Observable<void> {
+    return this.apiService.deleteSectionPage(id);
+  }
+
+  getPublishedPartners(): Observable<ContentPartner[]> {
+    return this.apiService.getPublishedPartners();
+  }
+
+  getSiteLogo(): Observable<ContentPartner | null> {
+    return this.apiService.getSiteLogo();
   }
 
   getUploadPages(): Observable<{name: string; label: string; uploadDir: string; files: string[]}[]> {

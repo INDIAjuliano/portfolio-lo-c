@@ -1,4 +1,5 @@
 .exp-section {
+  --text-muted: rgba(255, 255, 255, 0.7);
   padding: 0 0 120px;
   background: var(--bg-dark2);
   position: relative;

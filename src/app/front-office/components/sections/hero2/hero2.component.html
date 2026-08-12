@@ -1,5 +1,33 @@
-<section class="hero2-hero" id="hero2-home">
-  <canvas class="hero2-canvas" #hero2Canvas></canvas>
+<div class="hero2-loader-wrapper" id="hero2-loaderWrapper">
+  <div class="hero2-loader-overlay" id="hero2-loaderOverlay"></div>
+  <div class="hero2-curtain-container" id="hero2-curtainContainer">
+    <div class="hero2-curtain-panel"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-ml"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-ml"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-ml"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-ml"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-ml"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-ml"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-t"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-t"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-t"><div class="hero2-curtain-panel-inner"></div></div>
+    <div class="hero2-curtain-panel hero2-u-hide-t"><div class="hero2-curtain-panel-inner"></div></div>
+  </div>
+  <div class="hero2-loader-brand" id="hero2-loaderBrand">
+    <h1>LOÏC</h1>
+    <p>PHOTOGRAPHY</p>
+  </div>
+  <div class="hero2-loader-progress" id="hero2-loaderProgress">
+    <div class="hero2-loader-progress-fill" id="hero2-loaderProgressFill"></div>
+  </div>
+</div>
+
+<section class="hero2" id="hero2-home">
+  <canvas class="hero2-canvas" #hero2Canvas id="hero2-canvas"></canvas>
 
   <div class="hero2-overlay" id="hero2-overlay"></div>
 
@@ -8,19 +36,19 @@
     <p class="hero2-subtitle">"Immerse yourself in a visual journey where reality meets the imaginary."</p>
   </div>
 
+  <div class="scroll-indicator" id="hero2-scroll-indicator" #hero2ScrollIndicator>
+    <span>Scroll Down</span>
+    <span class="material-symbols-outlined">keyboard_double_arrow_down</span>
+  </div>
+
+  <div class="hero2-dots" id="hero2-dots"></div>
+
+  <div class="hero2-thumbs" id="hero2-thumbs"></div>
+
   <button class="hero2-nav hero2-nav-prev" (click)="prevSlide()" aria-label="Previous">
     <span class="material-symbols-outlined">chevron_left</span>
   </button>
   <button class="hero2-nav hero2-nav-next" (click)="nextSlide()" aria-label="Next">
     <span class="material-symbols-outlined">chevron_right</span>
   </button>
-
-  <div class="hero2-dots" id="hero2-dots"></div>
-
-  <div class="hero2-thumbs" id="hero2-thumbs"></div>
-
-  <div class="scroll-indicator" id="hero2-scroll-indicator" #hero2ScrollIndicator>
-    <span>Scroll Down</span>
-    <span class="material-symbols-outlined">keyboard_double_arrow_down</span>
-  </div>
 </section>

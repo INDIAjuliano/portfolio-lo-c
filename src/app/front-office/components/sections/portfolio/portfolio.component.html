@@ -8,43 +8,43 @@
     <a class="btn-ghost rv" href="#">View all works</a>
   </div>
 
-  <div class="portfolio-grid">
-    <div class="col-span-4">
-      <div class="flex-col">
-        <div class="portfolio-item col-span-4">
-          <div class="image" [style.backgroundImage]="'url(' + portfolioItems[0].image + ')'"></div>
-          <div class="overlay"></div>
-          <span class="label">{{ portfolioItems[0].label }}</span>
+  @if (isLoading) {
+    <div class="portfolio-loading">Chargement...</div>
+  } @else {
+    <div class="portfolio-grid">
+      <div class="col-span-4">
+        <div class="flex-col">
+          @for (item of displayItems | slice:0:2; track item.id) {
+            <div class="portfolio-item col-span-4">
+              <div class="image" [style.backgroundImage]="'url(' + item.image + ')'"></div>
+              <div class="overlay"></div>
+              <span class="label">{{ item.label }}</span>
+            </div>
+          }
         </div>
+      </div>
+
+      @if (displayItems[2]) {
         <div class="portfolio-item col-span-4">
-          <div class="image" [style.backgroundImage]="'url(' + portfolioItems[1].image + ')'"></div>
+          <div class="image" [style.backgroundImage]="'url(' + displayItems[2].image + ')'"></div>
           <div class="overlay"></div>
-          <span class="label">{{ portfolioItems[1].label }}</span>
+          <span class="label">{{ displayItems[2].label }}</span>
+        </div>
+      }
+
+      <div class="col-span-4">
+        <div class="flex-col">
+          @for (item of displayItems | slice:3:5; track item.id) {
+            <div class="portfolio-item">
+              <div class="image" [style.backgroundImage]="'url(' + item.image + ')'"></div>
+              <div class="overlay"></div>
+              <span class="label">{{ item.label }}</span>
+            </div>
+          }
         </div>
       </div>
     </div>
-
-    <div class="portfolio-item col-span-4">
-      <div class="image" [style.backgroundImage]="'url(' + portfolioItems[2].image + ')'"></div>
-      <div class="overlay"></div>
-      <span class="label">{{ portfolioItems[2].label }}</span>
-    </div>
-
-    <div class="col-span-4">
-      <div class="flex-col">
-        <div class="portfolio-item">
-          <div class="image" [style.backgroundImage]="'url(' + portfolioItems[3].image + ')'"></div>
-          <div class="overlay"></div>
-          <span class="label">{{ portfolioItems[3].label }}</span>
-        </div>
-        <div class="portfolio-item">
-          <div class="image" [style.backgroundImage]="'url(' + portfolioItems[4].image + ')'"></div>
-          <div class="overlay"></div>
-          <span class="label">{{ portfolioItems[4].label }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  }
 
   <div style="text-align: center; margin-top: 48px;">
     <button class="btn-primary">

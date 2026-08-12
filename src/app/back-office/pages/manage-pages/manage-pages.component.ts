@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { MediaStateService } from '../../../core/services/media-state.service';
 import { environment } from '../../../../environments/environment';
-import { forkJoin, switchMap, of } from 'rxjs';
+import { forkJoin, switchMap, of, Subject, takeUntil } from 'rxjs';
 
 interface Album {
   id: number;
@@ -32,6 +33,7 @@ interface Album {
 export class ManagePagesComponent implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
+  private mediaStateService = inject(MediaStateService);
 
   albums: Album[] = [];
   mediaItems: any[] = [];
@@ -67,6 +69,262 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
   coverImageFile: File | null = null;
   coverImagePreview: string | null = null;
   coverImageSource: 'url' | 'file' = 'url';
+
+  selectionMode = false;
+  selectedMediaForAssign = new Set<number>();
+  assignPage = 'home';
+  assignSection = '';
+  isAssigning = false;
+  multiAssignMode = false;
+  selectedSectionsForMultiAssign: Set<string> = new Set();
+
+  mediaPage = 1;
+  mediaPageSize = 20;
+  isLoadingMoreMedia = false;
+  hasMoreMedia = true;
+
+  readonly SECTION_EXPECTED_COUNTS: Record<string, number> = {
+    'home/hero': 1,
+    'home/packages': 3,
+    'home/gallery': 3,
+    'home/portfolio': 5,
+    'home/about': 4,
+    'home/passion': 2,
+    'home/offer': 1,
+    'gallery/hero': 1,
+    'gallery/main': 6,
+    'portfolio/main': 5,
+    'about/main': 3,
+    'contact/main': 1
+  };
+
+  private destroy$ = new Subject<void>();
+
+  getExpectedImageCount(page: string, section: string): number | null {
+    const key = `${page}/${section}`;
+    return this.SECTION_EXPECTED_COUNTS[key] ?? null;
+  }
+
+  get assignSectionOptions(): { value: string; label: string }[] {
+    return this.sections[this.assignPage] || [];
+  }
+
+  get selectedMediaCount(): number {
+    return this.selectedMediaForAssign.size;
+  }
+
+  get pagedMediaForSelection(): any[] {
+    const end = this.mediaPage * this.mediaPageSize;
+    return this.mediaItems.slice(0, end);
+  }
+
+  get mediaTotalPages(): number {
+    return Math.max(1, Math.ceil(this.mediaItems.length / this.mediaPageSize));
+  }
+
+  get mediaCurrentPage(): number {
+    return this.mediaPage;
+  }
+
+  get mediaShowingCount(): number {
+    return Math.min(this.mediaPage * this.mediaPageSize, this.mediaItems.length);
+  }
+
+  loadMoreMedia(): void {
+    if (this.isLoadingMoreMedia || !this.hasMoreMedia) return;
+    this.isLoadingMoreMedia = true;
+    setTimeout(() => {
+      this.mediaPage++;
+      this.isLoadingMoreMedia = false;
+      this.hasMoreMedia = this.mediaPage < this.mediaTotalPages;
+    }, 300);
+  }
+
+  prevMediaPage(): void {
+    if (this.mediaPage > 1) {
+      this.mediaPage--;
+      this.hasMoreMedia = this.mediaPage < this.mediaTotalPages;
+    }
+  }
+
+  nextMediaPage(): void {
+    this.loadMoreMedia();
+  }
+
+  onMediaPoolScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const scrollBottom = target.scrollTop + target.clientHeight;
+    if (scrollBottom >= target.scrollHeight - 40) {
+      this.loadMoreMedia();
+    }
+  }
+
+  resetMediaPagination(): void {
+    this.mediaPage = 1;
+    this.hasMoreMedia = this.mediaItems.length > this.mediaPageSize;
+  }
+
+  get assignExpectedCount(): number | null {
+    return this.getExpectedImageCount(this.assignPage, this.assignSection);
+  }
+
+  toggleSelectionMode(): void {
+    this.selectionMode = !this.selectionMode;
+    if (!this.selectionMode) {
+      this.selectedMediaForAssign.clear();
+    } else {
+      this.assignPage = this.selectedPage;
+      this.assignSection = this.sections[this.selectedPage]?.[0]?.value || '';
+      this.resetMediaPagination();
+    }
+  }
+
+  toggleMediaSelection(mediaId: number): void {
+    if (this.selectedMediaForAssign.has(mediaId)) {
+      this.selectedMediaForAssign.delete(mediaId);
+    } else {
+      this.selectedMediaForAssign.add(mediaId);
+    }
+  }
+
+  isMediaSelected(mediaId: number): boolean {
+    return this.selectedMediaForAssign.has(mediaId);
+  }
+
+  updateAssignSection(): void {
+    this.assignSection = this.sections[this.assignPage]?.[0]?.value || '';
+  }
+
+  toggleMultiAssignMode(): void {
+    this.multiAssignMode = !this.multiAssignMode;
+    if (!this.multiAssignMode) {
+      this.selectedSectionsForMultiAssign.clear();
+    }
+  }
+
+  toggleSectionForMultiAssign(page: string, section: string): void {
+    const key = `${page}/${section}`;
+    if (this.selectedSectionsForMultiAssign.has(key)) {
+      this.selectedSectionsForMultiAssign.delete(key);
+    } else {
+      this.selectedSectionsForMultiAssign.add(key);
+    }
+  }
+
+  isSectionSelectedForMultiAssign(page: string, section: string): boolean {
+    return this.selectedSectionsForMultiAssign.has(`${page}/${section}`);
+  }
+
+  quickAssignImages(): void {
+    if (this.selectedMediaForAssign.size === 0) {
+      alert('Veuillez sélectionner au moins une image');
+      return;
+    }
+
+    const targets = this.multiAssignMode
+      ? Array.from(this.selectedSectionsForMultiAssign).map(key => {
+          const [page, section] = key.split('/');
+          return { page, section };
+        })
+      : [{ page: this.assignPage, section: this.assignSection }];
+
+    if (targets.length === 0) {
+      alert('Veuillez sélectionner au moins une section');
+      return;
+    }
+
+    const mediaIds = Array.from(this.selectedMediaForAssign);
+    for (const target of targets) {
+      if (target.page === 'home' && target.section === 'hero2') {
+        if (mediaIds.length < 2) {
+          alert('Hero 2 nécessite minimum 2 images');
+          return;
+        }
+        if (mediaIds.length > 10) {
+          alert('Hero 2 accepte maximum 10 images');
+          return;
+        }
+      }
+    }
+
+    this.isAssigning = true;
+    const requests = targets.map(target => {
+      const expectedCount = this.getExpectedImageCount(target.page, target.section);
+      if (expectedCount !== null && mediaIds.length !== expectedCount) {
+        const confirm = window.confirm(
+          `La section "${target.page} / ${target.section}" requiert ${expectedCount} photo(s). Vous avez sélectionné ${mediaIds.length}.\n\nVoulez-vous continuer quand même ?`
+        );
+        if (!confirm) return null;
+      }
+
+      const payload: any = {
+        title: `${target.page} / ${target.section}`,
+        description: null,
+        coverUrl: this.mediaItems.find(m => m.id === mediaIds[0])?.imageUrl || null,
+        mediaIds,
+        categoryId: this.categories.length > 0 ? this.categories[0].id : 0,
+        page: target.page,
+        section: target.section === 'main' ? null : target.section,
+        isPublished: true
+      };
+
+      const existingAlbum = this.albums.find(a => a.page === target.page && (target.section === 'main' ? !a.section : a.section === target.section));
+      if (existingAlbum) {
+        return this.apiService.updateAlbum(existingAlbum.id, payload);
+      }
+      return this.apiService.createAlbum(payload);
+    }).filter(Boolean);
+
+    if (requests.length === 0) {
+      this.isAssigning = false;
+      return;
+    }
+
+    forkJoin(requests).subscribe({
+      next: () => {
+        console.log(`[ManagePages] assigned ${mediaIds.length} images to ${requests.length} section(s)`);
+        this.mediaStateService.loadAll().subscribe();
+        this.selectedMediaForAssign.clear();
+        this.selectedSectionsForMultiAssign.clear();
+        this.isAssigning = false;
+        this.showToastMessage(`${mediaIds.length} image(s) assignée(s) à ${requests.length} section(s)`, 'success');
+      },
+      error: (err) => {
+        console.error('[ManagePages] multi-assign failed', err);
+        this.showToastMessage('Erreur lors de l\'assignation', 'error');
+        this.isAssigning = false;
+      }
+    });
+  }
+
+  resetAssignment(): void {
+    const existingAlbum = this.albums.find(a => a.page === this.assignPage && (this.assignSection === 'main' ? !a.section : a.section === this.assignSection));
+    if (!existingAlbum) {
+      this.showToastMessage('Aucune assignation à réinitialiser pour cette section', 'error');
+      return;
+    }
+
+    const confirmReset = window.confirm(
+      `Réinitialiser les images de la section "${this.assignPage} / ${this.assignSection}" ?\n\nCette action supprimera l'album assigné et revenira aux images par défaut.`
+    );
+    if (!confirmReset) return;
+
+    this.isAssigning = true;
+    this.apiService.deleteAlbum(existingAlbum.id).subscribe({
+      next: () => {
+        console.log('[ManagePages] assignment reset successfully', existingAlbum.id);
+        this.mediaStateService.loadAll().subscribe();
+        this.selectedMediaForAssign.clear();
+        this.isAssigning = false;
+        this.showToastMessage(`Assignation réinitialisée pour ${this.assignPage}/${this.assignSection}`, 'success');
+      },
+      error: (err) => {
+        console.error('[ManagePages] reset failed', err);
+        this.showToastMessage('Erreur lors de la réinitialisation', 'error');
+        this.isAssigning = false;
+      }
+    });
+  }
 
   showImageModal = false;
   isEditingImage = false;
@@ -117,6 +375,7 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
     home: [
       { value: 'hero', label: 'Hero' },
       { value: 'hero2', label: 'Hero 2' },
+      { value: 'packages', label: 'Photography packages' },
       { value: 'gallery', label: 'Gallery section' },
       { value: 'portfolio', label: 'Portfolio section' },
       { value: 'about', label: 'About section' },
@@ -147,12 +406,38 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
       return;
     }
     this.selectedSection = this.sections[this.selectedPage]?.[0]?.value || '';
-    this.loadDataFromApi();
+
+    this.mediaStateService.albums$.pipe(takeUntil(this.destroy$)).subscribe(albums => {
+      this.albums = albums.map((a: any) => this.mapAlbum(a));
+      this.isLoading = false;
+    });
+
+    this.mediaStateService.media$.pipe(takeUntil(this.destroy$)).subscribe(media => {
+      this.mediaItems = media;
+      this.resetMediaPagination();
+    });
+
+    this.mediaStateService.categories$.pipe(takeUntil(this.destroy$)).subscribe(categories => {
+      this.categories = categories;
+    });
+
+    this.mediaStateService.loadAll().subscribe({
+      next: () => {
+        this.isLoading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Impossible de charger les données.';
+        this.isLoading = false;
+      }
+    });
+
     this.loadPageFiles();
     this.loadCoverImages();
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (typeof document !== 'undefined') {
       document.removeEventListener('click', () => {});
     }
@@ -161,31 +446,14 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
   loadDataFromApi(): void {
     this.isLoading = true;
     this.errorMessage = null;
-
-    this.apiService.getAlbums().subscribe({
-      next: (albums) => {
-        this.albums = albums.map((a: any) => this.mapAlbum(a));
+    this.mediaStateService.loadAll().subscribe({
+      next: () => {
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Failed to load albums', err);
-        this.errorMessage = 'Impossible de charger les albums.';
+      error: () => {
+        this.errorMessage = 'Impossible de charger les données.';
         this.isLoading = false;
       }
-    });
-
-    this.apiService.getMedia().subscribe({
-      next: (media) => {
-        this.mediaItems = media;
-      },
-      error: (err) => console.error('Failed to load media', err)
-    });
-
-    this.apiService.getCategories().subscribe({
-      next: (categories) => {
-        this.categories = categories;
-      },
-      error: (err) => console.error('Failed to load categories', err)
     });
   }
 
@@ -206,7 +474,7 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
     };
   }
 
-  private getAbsoluteUrl(url: string | null | undefined): string {
+  getAbsoluteUrl(url: string | null | undefined): string {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
      if (url.startsWith('//')) return (environment.apiUrl.startsWith('https') ? 'https:' : 'http:') + url;
@@ -482,26 +750,18 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.apiService.getMedia().subscribe({
-      next: (media: any[]) => {
-        const allMedia = media;
-        this.apiService.getAlbums().subscribe({
-          next: (albums: any[]) => {
-            const album = albums.find(a => a.id === albumId);
-            const mediaIds = album?.mediaIds || [];
-            this.albumImages = allMedia
-              .filter((m: any) => mediaIds.includes(m.id))
-              .map((m: any) => ({
-                ...m,
-                imageUrl: this.getAbsoluteUrl(m.imageUrl),
-                thumbnailUrl: this.getAbsoluteUrl(m.thumbnailUrl),
-                videoUrl: this.getAbsoluteUrl(m.videoUrl),
-                embedUrl: this.getAbsoluteUrl(m.embedUrl)
-              }));
-          }
-        });
-      }
-    });
+    const allMedia = this.mediaStateService.currentMedia;
+    const album = this.mediaStateService.currentAlbums.find(a => a.id === albumId);
+    const mediaIds = album?.mediaIds || [];
+    this.albumImages = allMedia
+      .filter((m: any) => mediaIds.includes(m.id))
+      .map((m: any) => ({
+        ...m,
+        imageUrl: this.getAbsoluteUrl(m.imageUrl),
+        thumbnailUrl: this.getAbsoluteUrl(m.thumbnailUrl),
+        videoUrl: this.getAbsoluteUrl(m.videoUrl),
+        embedUrl: this.getAbsoluteUrl(m.embedUrl)
+      }));
   }
 
   openCreateImageModal(): void {
@@ -723,16 +983,16 @@ export class ManagePagesComponent implements OnInit, OnDestroy {
       mediaIds: this.newAlbum.mediaIds || [],
       categoryId: this.newAlbum.categoryId || null,
       page: this.newAlbum.page || null,
-      section: this.newAlbum.section || null,
+      section: (this.newAlbum.section && this.newAlbum.section !== 'main') ? this.newAlbum.section : null,
       isPublished: true
     };
 
     if (this.editingAlbumId) {
       this.apiService.updateAlbum(this.editingAlbumId!, payload).subscribe({
-        next: (updated) => {
-          this.loadDataFromApi();
-          this.closeModal();
-        },
+      next: (updated) => {
+        this.mediaStateService.loadAll().subscribe();
+        this.closeModal();
+      },
         error: () => {
           alert('Erreur lors de la modification');
           this.isSubmitting = false;

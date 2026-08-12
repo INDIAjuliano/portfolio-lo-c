@@ -11,7 +11,7 @@
   --text-primary: #1a1c1c;
   --text-secondary: #4c4546;
   --text-inverse: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.55);
+  --text-muted: #9ca3af;
   --border-color: #cfc4c5;
   --shadow-color: rgba(0, 0, 0, 0.08);
   --overlay-light: rgba(0, 0, 0, 0.05);
@@ -42,7 +42,7 @@
   --text-primary: #f0f0f0;
   --text-secondary: #a0a0a0;
   --text-inverse: #0a0a0a;
-  --text-muted: rgba(255, 255, 255, 0.45);
+  --text-muted: #6b7280;
   --border-color: #2a2a2a;
   --shadow-color: rgba(255, 255, 255, 0.05);
   --overlay-light: rgba(255, 255, 255, 0.05);
@@ -342,34 +342,9 @@ body {
 /* ============================================================ */
 /* HERO VARIANT SWITCHING */
 /* ============================================================ */
-/* Default: show hero1 (app-hero), hide hero2 (app-hero2) */
 app-hero {
   display: block;
 }
 app-hero2 {
-  display: block;
-}
-
-/* When India-J or Vert or Orange theme is active: hide hero2, show hero1 */
-[data-hero-variant="hero1"] app-hero2 {
-  display: none !important;
-}
-[data-hero-variant="hero1"] app-hero {
-  display: block;
-}
-
-/* When Violet theme is active: hide hero1, show hero2 */
-[data-hero-variant="hero2"] app-hero {
-  display: none !important;
-}
-[data-hero-variant="hero2"] app-hero2 {
-  display: block;
-}
-
-/* Fallback: if no data-hero-variant is set, show both (default behavior) */
-body:not([data-hero-variant]) app-hero {
-  display: block;
-}
-body:not([data-hero-variant]) app-hero2 {
   display: block;
 }

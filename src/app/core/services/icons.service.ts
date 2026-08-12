@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { MDI_ICONS } from '../../../../assets/icons/icons.constants';
+import { MDI_ICONS } from '../../../assets/icons/icons.constants';
 
 @Injectable({
   providedIn: 'root'

@@ -57,6 +57,17 @@ export interface Category {
   icon?: string | null;
 }
 
+export interface Partner {
+  id: number;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  linkUrl?: string;
+  position?: number;
+  isPublished: boolean;
+  isSiteLogo: boolean;
+}
+
 export interface MediaItem {
   id: number;
   title: string;
@@ -423,6 +434,72 @@ export class ApiService {
       url += '?' + queryString;
     }
     return this.http.get<any[]>(url, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getSectionPage(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/section-pages/${id}`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  createSectionPage(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/section-pages`, data, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateSectionPage(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/section-pages/${id}`, data, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteSectionPage(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/section-pages/${id}`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPublishedPartners(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/partners/published`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getSiteLogo(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/partners/site-logo`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getAllPartners(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/partners`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPartner(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/partners/${id}`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  createPartner(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/partners`, data, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updatePartner(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/partners/${id}`, data, { headers: this.getAuthHeaders() }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deletePartner(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/partners/${id}`, { headers: this.getAuthHeaders() }).pipe(
       catchError(this.handleError)
     );
   }

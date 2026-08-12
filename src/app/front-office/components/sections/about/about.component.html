@@ -6,12 +6,9 @@
       }
     </div>
     <div class="about-content">
-      <h2>About the Photographer</h2>
+      <h2>{{ sectionPage?.title || 'About the Photographer' }}</h2>
       <p>
-        I am a professional photographer specializing in capturing authentic moments that tell compelling stories. 
-        With over 10 years of experience, I bring a refined artistic vision to every shoot—whether it is a wedding, 
-        a corporate event, or a personal portrait session. My approach combines technical precision with creative 
-        intuition to deliver images that feel both timeless and emotionally resonant.
+        {{ sectionPage?.description || 'I am a professional photographer specializing in capturing authentic moments that tell compelling stories. With over 10 years of experience, I bring a refined artistic vision to every shoot—whether it is a wedding, a corporate event, or a personal portrait session. My approach combines technical precision with creative intuition to deliver images that feel both timeless and emotionally resonant.' }}
       </p>
       <button class="btn-primary">
         View More

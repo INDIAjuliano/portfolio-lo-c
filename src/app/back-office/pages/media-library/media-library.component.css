@@ -2027,3 +2027,132 @@
     object-fit: cover;
     display: block;
 }
+
+.ml-texts-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.ml-texts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.ml-text-item {
+  padding: 16px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-secondary, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.ml-text-item:hover {
+  border-color: var(--accent-color, #6c5ce7);
+}
+
+.ml-text-item.selected {
+  border-color: var(--accent-color, #6c5ce7);
+  background: rgba(108, 92, 231, 0.04);
+}
+
+.ml-text-item-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.ml-text-item-page {
+  color: var(--text-secondary, #6b7280);
+}
+
+.ml-text-item-section {
+  color: var(--text-muted, #9ca3af);
+}
+
+.ml-text-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a2e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 32px;
+}
+
+.ml-text-item .ml-delete-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.ml-texts-editor {
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--radius-sm, 10px);
+  padding: 24px;
+}
+
+.ml-texts-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ml-texts-form .ml-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ml-texts-form .ml-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ml-char-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted, #9ca3af);
+}
+
+.ml-texts-form input,
+.ml-texts-form textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-primary, #f5f5f5);
+  color: var(--text-primary, #1a1a2e);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.ml-texts-form input:focus,
+.ml-texts-form textarea:focus {
+  border-color: var(--accent-color, #6c5ce7);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+}
+
+.ml-empty-state {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted, #9ca3af);
+  font-size: 14px;
+}

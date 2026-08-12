@@ -87,6 +87,14 @@
   text-transform: uppercase;
 }
 
+.portfolio-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
 .col-span-4 { grid-column: span 4; }
 
 .flex-col {

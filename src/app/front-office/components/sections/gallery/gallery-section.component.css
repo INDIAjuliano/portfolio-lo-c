@@ -189,8 +189,8 @@
   margin-bottom: 16px;
   border-radius: 12px;
   background: #f5f5f5;
-  opacity: 0;
-  transform: translateY(30px) scale(0.97);
+  opacity: 1;
+  transform: none;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 

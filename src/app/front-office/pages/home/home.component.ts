@@ -10,6 +10,7 @@ import { PortfolioComponent } from '../../components/sections/portfolio/portfoli
 import { AboutComponent } from '../../components/sections/about/about.component';
 import { PassionComponent } from '../../components/sections/passion/passion.component';
 import { OfferComponent } from '../../components/sections/offer/offer.component';
+import { LogoScrollerComponent } from '../../components/sections/logo-scroller/logo-scroller.component';
 import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
@@ -23,7 +24,8 @@ import { ThemeService } from '../../../core/services/theme.service';
     PortfolioComponent,
     AboutComponent,
     PassionComponent,
-    OfferComponent
+    OfferComponent,
+    LogoScrollerComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],

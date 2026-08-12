@@ -4,12 +4,13 @@
     <div class="ml-container">
 
       <div class="ml-content">
-        <div class="ml-tabs">
-          <button class="ml-tab" [class.active]="!managePagesTabActive" (click)="managePagesTabActive = false">Médiathèque</button>
-          <button class="ml-tab" [class.active]="managePagesTabActive" (click)="managePagesTabActive = true">Gestion des pages</button>
-        </div>
+      <div class="ml-tabs">
+        <button class="ml-tab" [class.active]="!managePagesTabActive && !textsTabActive" (click)="managePagesTabActive = false; textsTabActive = false">Médiathèque</button>
+        <button class="ml-tab" [class.active]="textsTabActive" (click)="textsTabActive = true; managePagesTabActive = false">Textes</button>
+        <button class="ml-tab" [class.active]="managePagesTabActive" (click)="managePagesTabActive = true; textsTabActive = false">Gestion des pages</button>
+      </div>
 
-        @if (!managePagesTabActive) {
+      @if (!managePagesTabActive && !textsTabActive) {
           <div class="ml-page-header">
             <h2>Médiathèque</h2>
             <p>Gérez vos images, vidéos et albums multimédias.</p>
@@ -286,6 +287,80 @@
               </div>
             }
           }
+        } @else if (textsTabActive) {
+          <div class="ml-page-header">
+            <h2>Textes des sections</h2>
+            <p>Modifiez les textes affichés pour chaque section de la page d'accueil.</p>
+          </div>
+
+          <div class="ml-texts-layout">
+            <div class="ml-texts-list">
+              @for (page of sectionPages; track page.id) {
+                <div class="ml-text-item" [class.selected]="selectedSectionPageId === page.id" (click)="selectSectionPage(page)">
+                  <div class="ml-text-item-header">
+                    <span class="ml-text-item-page">{{ page.page }}</span>
+                    <span class="ml-text-item-section">/ {{ page.section }}</span>
+                  </div>
+                  <div class="ml-text-item-title">{{ page.title || 'Sans titre' }}</div>
+                  <button class="ml-icon-btn ml-delete-btn" type="button" (click)="$event.stopPropagation(); deleteSectionPage(page)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              }
+              @if (sectionPages.length === 0) {
+                <div class="ml-empty-state">Aucun texte de section disponible.</div>
+              }
+            </div>
+
+            <div class="ml-texts-editor">
+              @if (selectedSectionPageId) {
+                <div class="ml-texts-form">
+                  <div class="ml-form-group">
+                    <label>Titre <span class="ml-char-count">{{ getSectionTextCharCount('title') }}/100</span></label>
+                    <input
+                      type="text"
+                      [(ngModel)]="sectionTextForm.title"
+                      maxlength="100"
+                      placeholder="Titre de la section"
+                      [disabled]="isSectionTextSubmitting"
+                    />
+                  </div>
+                  <div class="ml-form-group">
+                    <label>Description <span class="ml-char-count">{{ getSectionTextCharCount('description') }}/500</span></label>
+                    <textarea
+                      [(ngModel)]="sectionTextForm.description"
+                      maxlength="500"
+                      rows="3"
+                      placeholder="Description de la section..."
+                      [disabled]="isSectionTextSubmitting"
+                    ></textarea>
+                  </div>
+                  <div class="ml-form-group">
+                    <label>Contenu <span class="ml-char-count">{{ getSectionTextCharCount('content') }}/1000</span></label>
+                    <textarea
+                      [(ngModel)]="sectionTextForm.content"
+                      maxlength="1000"
+                      rows="5"
+                      placeholder="Contenu additionnel..."
+                      [disabled]="isSectionTextSubmitting"
+                    ></textarea>
+                  </div>
+                  <div class="ml-modal-footer">
+                    <button class="ml-modal-btn ml-modal-btn-cancel" (click)="selectSectionPage(null)" [disabled]="isSectionTextSubmitting">Annuler</button>
+                    <button class="ml-modal-btn ml-modal-btn-validate" (click)="saveSectionText()" [disabled]="isSectionTextSubmitting">
+                      @if (isSectionTextSubmitting) {
+                        Enregistrement...
+                      } @else {
+                        Enregistrer
+                      }
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="ml-empty-state">Sélectionnez un texte de section pour le modifier.</div>
+              }
+            </div>
+          </div>
         } @else {
           <app-manage-pages></app-manage-pages>
         }
