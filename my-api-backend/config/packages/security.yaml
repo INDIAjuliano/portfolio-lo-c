@@ -44,6 +44,7 @@ security:
         - { path: ^/api/auth/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/auth/me, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/themes, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/section-pages, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/subscription, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/users, roles: ROLE_ADMIN }
         - { path: ^/api/categories, roles: ROLE_ADMIN }

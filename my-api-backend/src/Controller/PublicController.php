@@ -21,9 +21,8 @@ class PublicController
     #[Route('/media', name: 'media_list', methods: ['GET'])]
     public function listMedia(Request $request): JsonResponse
     {
-        $page = max(1, (int) $request->query->get('page', 1));
-        $limit = max(1, (int) $request->query->get('limit', 20));
-        $offset = ($page - 1) * $limit;
+        $page = $request->query->get('page');
+        $limit = $request->query->get('limit');
 
         $qb = $this->mediaRepository->createQueryBuilder('m')
             ->leftJoin('m.albumMedia', 'am')
@@ -35,9 +34,15 @@ class PublicController
         ))
             ->setParameter('published', true)
             ->setParameter('albumPublished', true)
-            ->orderBy('m.id', 'DESC')
-            ->setFirstResult($offset)
-            ->setMaxResults($limit);
+            ->orderBy('m.id', 'DESC');
+
+        if ($page !== null) {
+            $page = max(1, (int) $page);
+            $limit = $limit !== null ? max(1, (int) $limit) : 20;
+            $offset = ($page - 1) * $limit;
+            $qb->setFirstResult($offset)
+                ->setMaxResults($limit);
+        }
 
         $type = $request->query->get('type');
         if ($type !== null) {

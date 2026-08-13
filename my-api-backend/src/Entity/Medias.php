@@ -71,10 +71,10 @@ class Medias
     private ?string $durationFormatted = null;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
-    private array $gallery = [];
+    private ?array $gallery = [];
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
-    private array $tags = [];
+    private ?array $tags = [];
 
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $isPublished = false;
@@ -323,10 +323,10 @@ class Medias
 
     public function getGallery(): array
     {
-        return $this->gallery;
+        return $this->gallery ?? [];
     }
 
-    public function setGallery(array $gallery): static
+    public function setGallery(?array $gallery): static
     {
         $this->gallery = $gallery;
 
@@ -335,10 +335,10 @@ class Medias
 
     public function getTags(): array
     {
-        return $this->tags;
+        return $this->tags ?? [];
     }
 
-    public function setTags(array $tags): static
+    public function setTags(?array $tags): static
     {
         $this->tags = $tags;
 
