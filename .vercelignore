@@ -1,0 +1,29 @@
+# Dépendances
+node_modules/
+.angular/
+dist/
+npm-debug.log*
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+*.log
+
+# Fichiers de développement
+.idea/
+.vscode/
+*.iml
+.git/
+.gitignore
+
+# Fichiers de test
+tests/
+e2e/
+cypress/
+**/*.spec.ts
+**/*.test.ts
+
+# Dossiers générés
+.temp/
+.tmp/
+*.tmp

@@ -1,10 +1,27 @@
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-about">
-      <h3>{{ aboutTitle }}</h3>
-      <p>{{ aboutDescription }}</p>
+    <div class="footer-logo rv">
+      @if (siteLogo) {
+        <img [src]="siteLogo" [alt]="siteLogoAlt" class="footer-logo-img">
+      } @else {
+        <span class="footer-logo-text">LOÏC Photography</span>
+      }
     </div>
-    <div class="footer-social">
+    <div class="footer-contact rv">
+      <a href="mailto:{{ emailText }}" class="footer-contact-item">
+        <span class="material-symbols-outlined">mail</span>
+        {{ emailText }}
+      </a>
+      <a href="tel:+261328512630" class="footer-contact-item">
+        <span class="material-symbols-outlined">call</span>
+        {{ phoneText }}
+      </a>
+      <span class="footer-contact-item">
+        <span class="material-symbols-outlined">location_on</span>
+        {{ locationText }}
+      </span>
+    </div>
+    <div class="footer-social rv">
       <a href="#" target="_blank" rel="noopener" aria-label="Facebook">
         <app-icon name="face_nod" size="20"></app-icon>
       </a>
@@ -14,18 +31,18 @@
       <a href="#" target="_blank" rel="noopener" aria-label="YouTube">
         <app-icon name="movie" size="20"></app-icon>
       </a>
-      <a href="mailto:contact@loic-photography.com" aria-label="Email">
+      <a href="mailto:{{ emailText }}" aria-label="Email">
         <app-icon name="alternate_email" size="20"></app-icon>
       </a>
-      <a href="tel:+261328512630" class="phone">+261 32 85 126 30</a>
+      <a href="tel:+261328512630" class="phone" aria-label="Phone">{{ phoneText }}</a>
     </div>
-    <div class="footer-links">
+    <div class="footer-links rv">
       <a href="#">Privacy Policy</a>
       <a href="#">Terms of Service</a>
       <a href="#">Contact</a>
     </div>
-    <div class="footer-copy">
-      © {{ currentYear }} LOÏC Photography. All rights reserved.
+    <div class="footer-copy rv">
+      {{ copyrightText }}
     </div>
   </div>
 </footer>

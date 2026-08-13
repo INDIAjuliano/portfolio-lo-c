@@ -12,18 +12,41 @@ import { ContentService, ContentSectionPage } from '../../../core/services/conte
 })
 export class FooterComponent implements OnInit {
   currentYear = new Date().getFullYear();
-  aboutTitle = 'About the Photographer';
-  aboutDescription = 'I am a professional photographer specializing in capturing authentic moments that tell compelling stories. With over 10 years of experience, I bring a refined artistic vision to every shoot—whether it is a wedding, a corporate event, or a personal portrait session.';
+  siteLogo: string | null = null;
+  siteLogoAlt = 'LOÏC Photography';
+  copyrightText = `© ${this.currentYear} LOÏC Photography. All rights reserved.`;
+  emailText = 'contact@loic-photography.com';
+  phoneText = '+261 32 85 126 30';
+  locationText = 'Madagascar';
 
   constructor(private contentService: ContentService) {}
 
   ngOnInit(): void {
-    this.contentService.getSectionPages('home', 'about').subscribe({
-      next: (pages: ContentSectionPage[]) => {
+    this.contentService.getSiteLogo().subscribe({
+      next: (logo: any) => {
+        if (logo && logo.logoUrl) {
+          this.siteLogo = logo.logoUrl;
+          this.siteLogoAlt = logo.name || 'LOÏC Photography';
+        }
+      },
+      error: () => {
+        this.siteLogo = null;
+      }
+    });
+
+    this.contentService.getSectionPages('home', 'footer global').subscribe({
+      next: (pages) => {
         const page = pages[0];
         if (page) {
-          this.aboutTitle = page.title || this.aboutTitle;
-          this.aboutDescription = page.description || this.aboutDescription;
+          if (page.title) {
+            this.emailText = page.title;
+          }
+          if (page.description) {
+            this.phoneText = page.description;
+          }
+          if (page.content) {
+            this.copyrightText = page.content;
+          }
         }
       },
       error: () => {}

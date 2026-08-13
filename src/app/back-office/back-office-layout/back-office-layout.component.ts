@@ -23,6 +23,7 @@ export class BackOfficeLayoutComponent implements OnInit, OnDestroy {
   isDark = false;
   sidebarToggleIcon = 'chevron_left';
   sidebarTooltip = 'Réduire le menu';
+  currentYear = new Date().getFullYear();
 
   languages: LangOption[] = [
     { code: 'fr', name: 'Français', flag: '🇫🇷' },

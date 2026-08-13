@@ -236,6 +236,16 @@
   text-shadow: 0 2px 30px rgba(0, 0, 0, 0.3);
 }
 
+.hero2-text-content {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 600px;
+  margin: 24px auto 0;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.3);
+}
+
 .hero2-nav {
   position: absolute;
   top: 50%;

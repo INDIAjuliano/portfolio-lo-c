@@ -423,12 +423,12 @@ export class ApiService {
 
   getSectionPages(page?: string, section?: string): Observable<any[]> {
     let url = `${this.apiUrl}/section-pages`;
-    const params = new HttpParams();
+    let params = new HttpParams();
     if (page) {
-      params.set('page', page);
+      params = params.set('page', page);
     }
     if (section) {
-      params.set('section', section);
+      params = params.set('section', section);
     }
     const queryString = params.toString();
     if (queryString) {

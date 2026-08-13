@@ -178,6 +178,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   textsTabActive = false;
   sectionPages: ContentSectionPage[] = [];
   selectedSectionPageId: number | null = null;
+  isFooterSection = false;
   sectionTextForm: { title: string; description: string; content: string } = { title: '', description: '', content: '' };
   isSectionTextSubmitting = false;
 
@@ -265,6 +266,7 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
 
   selectSectionPage(page: ContentSectionPage | null): void {
     this.selectedSectionPageId = page?.id ?? null;
+    this.isFooterSection = page?.page === 'home' && page?.section === 'footer global';
     this.sectionTextForm = {
       title: page?.title ?? '',
       description: page?.description ?? '',
@@ -273,8 +275,13 @@ export class MediaLibraryComponent implements OnInit, OnDestroy {
   }
 
   saveSectionText(): void {
-    if (!this.sectionTextForm.title) {
+    if (!this.sectionTextForm.title && !this.isFooterSection) {
       this.showToastMessage('Le titre est requis', 'error');
+      return;
+    }
+
+    if (this.isFooterSection && !this.sectionTextForm.title) {
+      this.showToastMessage('L\'email est requis', 'error');
       return;
     }
 

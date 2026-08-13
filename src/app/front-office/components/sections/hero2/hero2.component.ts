@@ -44,9 +44,6 @@ export class Hero2Component implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.buildDotsAndThumbs();
-    if (!document.querySelector('app-loader')) {
-      this.initLoader();
-    }
     this.initScrollAnimations();
     this.initKeyboardNav();
     this.initBackOfficeBinding();
@@ -66,6 +63,13 @@ export class Hero2Component implements OnInit, AfterViewInit, OnDestroy {
         this.resetInterval();
       };
       window.addEventListener('loaderDismissed', this.loaderDismissedHandler);
+    } else {
+      const heroContent = document.getElementById('hero2-content');
+      const scrollIndicator = document.getElementById('hero2-scroll-indicator');
+      if (heroContent) heroContent.classList.add('visible');
+      if (scrollIndicator) scrollIndicator.classList.add('visible');
+      this.startMorphRenderer();
+      this.resetInterval();
     }
   }
 
@@ -262,33 +266,6 @@ export class Hero2Component implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
-    const aboutContent = document.querySelector('.about-content');
-    if (aboutContent) {
-      gsap.from('.about-content h2', {
-        scrollTrigger: { trigger: '.about-content', start: 'top 80%', toggleActions: 'play none none none' },
-        duration: 0.7,
-        opacity: 0,
-        x: -30,
-        ease: 'power2.out'
-      });
-      gsap.from('.about-content p', {
-        scrollTrigger: { trigger: '.about-content', start: 'top 80%', toggleActions: 'play none none none' },
-        duration: 0.8,
-        opacity: 0,
-        y: 20,
-        ease: 'power2.out',
-        delay: 0.2
-      });
-      gsap.from('.about-content .btn-primary', {
-        scrollTrigger: { trigger: '.about-content', start: 'top 80%', toggleActions: 'play none none none' },
-        duration: 0.6,
-        opacity: 0,
-        scale: 0.9,
-        ease: 'back.out(1.4)',
-        delay: 0.4
-      });
-    }
-
     const passionDark = document.querySelector('.passion-item.dark');
     if (passionDark) {
       gsap.from('.passion-item.dark .content', {
@@ -321,18 +298,6 @@ export class Hero2Component implements OnInit, AfterViewInit, OnDestroy {
         scale: 0.95,
         stagger: 0.1,
         ease: 'back.out(1.2)'
-      });
-    }
-
-    const footer = document.querySelector('.footer');
-    if (footer) {
-      gsap.from('.footer-inner > *', {
-        scrollTrigger: { trigger: '.footer', start: 'top 90%', toggleActions: 'play none none none' },
-        duration: 0.6,
-        opacity: 0,
-        y: 20,
-        stagger: 0.08,
-        ease: 'power2.out'
       });
     }
 

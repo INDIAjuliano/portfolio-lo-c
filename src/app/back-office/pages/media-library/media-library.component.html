@@ -317,36 +317,69 @@
             <div class="ml-texts-editor">
               @if (selectedSectionPageId) {
                 <div class="ml-texts-form">
-                  <div class="ml-form-group">
-                    <label>Titre <span class="ml-char-count">{{ getSectionTextCharCount('title') }}/100</span></label>
-                    <input
-                      type="text"
-                      [(ngModel)]="sectionTextForm.title"
-                      maxlength="100"
-                      placeholder="Titre de la section"
-                      [disabled]="isSectionTextSubmitting"
-                    />
-                  </div>
-                  <div class="ml-form-group">
-                    <label>Description <span class="ml-char-count">{{ getSectionTextCharCount('description') }}/500</span></label>
-                    <textarea
-                      [(ngModel)]="sectionTextForm.description"
-                      maxlength="500"
-                      rows="3"
-                      placeholder="Description de la section..."
-                      [disabled]="isSectionTextSubmitting"
-                    ></textarea>
-                  </div>
-                  <div class="ml-form-group">
-                    <label>Contenu <span class="ml-char-count">{{ getSectionTextCharCount('content') }}/1000</span></label>
-                    <textarea
-                      [(ngModel)]="sectionTextForm.content"
-                      maxlength="1000"
-                      rows="5"
-                      placeholder="Contenu additionnel..."
-                      [disabled]="isSectionTextSubmitting"
-                    ></textarea>
-                  </div>
+                  @if (isFooterSection) {
+                    <div class="ml-form-group">
+                      <label>Email <span class="ml-char-count">{{ getSectionTextCharCount('title') }}/100</span></label>
+                      <input
+                        type="email"
+                        [(ngModel)]="sectionTextForm.title"
+                        maxlength="100"
+                        placeholder="contact@loic-photography.com"
+                        [disabled]="isSectionTextSubmitting"
+                      />
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Téléphone <span class="ml-char-count">{{ getSectionTextCharCount('description') }}/500</span></label>
+                      <input
+                        type="tel"
+                        [(ngModel)]="sectionTextForm.description"
+                        maxlength="500"
+                        placeholder="+261 32 85 126 30"
+                        [disabled]="isSectionTextSubmitting"
+                      />
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Copyright <span class="ml-char-count">{{ getSectionTextCharCount('content') }}/1000</span></label>
+                      <textarea
+                        [(ngModel)]="sectionTextForm.content"
+                        maxlength="1000"
+                        rows="3"
+                        placeholder="© 2026 LOÏC Photography. All rights reserved."
+                        [disabled]="isSectionTextSubmitting"
+                      ></textarea>
+                    </div>
+                  } @else {
+                    <div class="ml-form-group">
+                      <label>Titre <span class="ml-char-count">{{ getSectionTextCharCount('title') }}/100</span></label>
+                      <input
+                        type="text"
+                        [(ngModel)]="sectionTextForm.title"
+                        maxlength="100"
+                        placeholder="Titre de la section"
+                        [disabled]="isSectionTextSubmitting"
+                      />
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Description <span class="ml-char-count">{{ getSectionTextCharCount('description') }}/500</span></label>
+                      <textarea
+                        [(ngModel)]="sectionTextForm.description"
+                        maxlength="500"
+                        rows="3"
+                        placeholder="Description de la section..."
+                        [disabled]="isSectionTextSubmitting"
+                      ></textarea>
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Contenu <span class="ml-char-count">{{ getSectionTextCharCount('content') }}/1000</span></label>
+                      <textarea
+                        [(ngModel)]="sectionTextForm.content"
+                        maxlength="1000"
+                        rows="5"
+                        placeholder="Contenu additionnel..."
+                        [disabled]="isSectionTextSubmitting"
+                      ></textarea>
+                    </div>
+                  }
                   <div class="ml-modal-footer">
                     <button class="ml-modal-btn ml-modal-btn-cancel" (click)="selectSectionPage(null)" [disabled]="isSectionTextSubmitting">Annuler</button>
                     <button class="ml-modal-btn ml-modal-btn-validate" (click)="saveSectionText()" [disabled]="isSectionTextSubmitting">
