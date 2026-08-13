@@ -25,7 +25,7 @@ composer require symfony/filesystem
 # 7. CORS (pour communiquer avec votre frontend)
 composer require nelmio/cors-bundle
 
-# Voir ce qui est déjà installé
+# Voir ce qui est déjà installécd
 composer show --installed | grep -E "doctrine|security|jwt|serializer"
 
 
