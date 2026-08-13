@@ -30,6 +30,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(message: 'Veuillez entrer un email valide')]
     private ?string $email = null;
 
+    #[ORM\Column(length: 50, unique: true, nullable: true)]
+    #[Assert\Length(max: 50)]
+    private ?string $pseudo = null;
+
     #[ORM\Column]
     private array $roles = [];
 
@@ -136,6 +140,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(?string $pseudo): self
+    {
+        $this->pseudo = $pseudo;
         return $this;
     }
 

@@ -1,0 +1,8 @@
+{
+    "name": "api-portfolio-loic",
+    "version": "1.0.0",
+    "scripts": {
+        "deploy": "vercel --prod",
+        "deploy:preview": "vercel"
+    }
+}

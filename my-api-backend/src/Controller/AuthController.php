@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Dto\LoginRequest;
 use App\Dto\RegisterRequest;
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,7 +22,9 @@ class AuthController
         private EntityManagerInterface $em,
         private UserPasswordHasherInterface $passwordHasher,
         private SerializerInterface $serializer,
-        private TokenStorageInterface $tokenStorage
+        private TokenStorageInterface $tokenStorage,
+        private JWTTokenManagerInterface $jwtManager,
+        private UserRepository $userRepository
     ) {}
 
     #[Route('/register', name: 'auth_register', methods: ['POST'])]
@@ -39,6 +43,7 @@ class AuthController
 
         $user = new User();
         $user->setEmail($data['email']);
+        $user->setPseudo($data['pseudo'] ?? null);
         $user->setPassword($this->passwordHasher->hashPassword($user, $data['password']));
         if (!empty($data['firstName'])) $user->setFirstName($data['firstName']);
         if (!empty($data['lastName'])) $user->setLastName($data['lastName']);
@@ -51,9 +56,27 @@ class AuthController
     }
 
     #[Route('/login', name: 'auth_login', methods: ['POST'])]
-    public function login(): JsonResponse
+    public function login(Request $request): JsonResponse
     {
-        return new JsonResponse(['message' => 'Use /api/auth/login with JSON body {email, password}'], JsonResponse::HTTP_OK);
+        $data = json_decode($request->getContent(), true) ?: [];
+
+        $login = $data['email'] ?? $data['pseudo'] ?? $data['username'] ?? null;
+        $password = $data['password'] ?? null;
+
+        if (!$login || !$password) {
+            return new JsonResponse(['error' => 'Email/pseudo and password are required'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->userRepository->findOneBy(['email' => $login])
+            ?? $this->userRepository->findOneByPseudo($login);
+
+        if (!$user || !$this->passwordHasher->isPasswordValid($user, $password)) {
+            return new JsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $token = $this->jwtManager->create($user);
+
+        return new JsonResponse(['token' => $token], JsonResponse::HTTP_OK);
     }
 
     #[Route('/me', name: 'auth_me', methods: ['GET'])]
