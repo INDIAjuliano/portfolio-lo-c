@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Mampii Photography | Services Photographiques Professionnels</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&family=Source+Sans+3:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: #f9f9f9;
+            color: #1a1c1c;
+            overflow-x: hidden;
+        }
+
+        /* Couleurs personnalisées */
+        :root {
+            --primary: #000000;
+            --on-primary: #ffffff;
+            --surface: #f9f9f9;
+            --surface-container-low: #f3f3f4;
+            --on-surface-variant: #4c4546;
+            --outline-variant: #cfc4c5;
+            --text-primary: #1a1c1c;
+            --text-secondary: #4c4546;
+            --bg-white: #ffffff;
+            --bg-black: #000000;
+        }
+
+        /* Typographie */
+        .font-headline-xl {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 48px;
+            line-height: 56px;
+            letter-spacing: -0.02em;
+            font-weight: 700;
+        }
+
+        .font-headline-lg {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 32px;
+            line-height: 40px;
+            letter-spacing: -0.01em;
+            font-weight: 700;
+        }
+
+        .font-headline-md {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 24px;
+            line-height: 32px;
+            font-weight: 600;
+        }
+
+        .font-body-lg {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 18px;
+            line-height: 28px;
+            font-weight: 400;
+        }
+
+        .font-body-md {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 16px;
+            line-height: 24px;
+            font-weight: 400;
+        }
+
+        .font-label-md {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .font-label-sm {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 12px;
+            line-height: 16px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding-left: 48px;
+            padding-right: 48px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 50;
+            padding: 32px 48px;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: #ffffff;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .navbar-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1c1c;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #4c4546;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #000000;
+        }
+
+        .nav-links a.active {
+            border-bottom: 2px solid #000000;
+            padding-bottom: 4px;
+        }
+
+        .nav-icons {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-left: 32px;
+            border-left: 1px solid #cfc4c5;
+        }
+
+        .nav-icons .material-symbols-outlined {
+            color: #000000;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .nav-icons .material-symbols-outlined:hover {
+            opacity: 0.7;
+        }
+
+        .btn-primary {
+            background: #000000;
+            color: #ffffff;
+            padding: 8px 24px;
+            border: none;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.3s, transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.8;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3));
+            z-index: 10;
+        }
+
+        .hero-image {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 20;
+            text-align: center;
+            padding: 0 16px;
+        }
+
+        .hero-title {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 48px;
+            line-height: 56px;
+            letter-spacing: 0.2em;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 18px;
+            line-height: 28px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            font-style: italic;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 20;
+        }
+
+        .scroll-indicator span:first-child {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #ffffff;
+        }
+
+        .scroll-indicator .material-symbols-outlined {
+            color: #ffffff;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* Section commune */
+        .section {
+            padding: 96px 48px;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-title h2 {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 32px;
+            line-height: 40px;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .section-title .line {
+            width: 96px;
+            height: 1px;
+            background: #000000;
+            margin: 0 auto;
+        }
+
+        /* Portfolio Grid */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            height: 800px;
+        }
+
+        .portfolio-item {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+
+        .portfolio-item .image {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.7s ease;
+        }
+
+        .portfolio-item:hover .image {
+            transform: scale(1.1);
+        }
+
+        .portfolio-item .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            transition: background 0.3s;
+        }
+
+        .portfolio-item:hover .overlay {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .portfolio-item .label {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            z-index: 10;
+            color: #ffffff;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .col-span-4 {
+            grid-column: span 4;
+        }
+
+        .col-span-8 {
+            grid-column: span 8;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: 100%;
+        }
+
+        .flex-col .portfolio-item {
+            height: 50%;
+        }
+
+        /* About Section */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 96px;
+            align-items: center;
+        }
+
+        .about-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .about-images .img {
+            aspect-ratio: 1;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .about-content h2 {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 32px;
+            line-height: 40px;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-left: 4px solid #000000;
+            padding-left: 24px;
+            margin-bottom: 32px;
+        }
+
+        .about-content p {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 16px;
+            line-height: 24px;
+            color: #4c4546;
+            margin-bottom: 32px;
+        }
+
+        /* Passion Section */
+        .passion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .passion-item {
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            align-items: flex-end;
+            padding: 48px;
+        }
+
+        .passion-item .bg-image {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .passion-item .content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .passion-item .content h3 {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 32px;
+            line-height: 40px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .passion-item .content p {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 16px;
+            line-height: 24px;
+            max-width: 400px;
+        }
+
+        .passion-item.white .content {
+            color: #000000;
+        }
+
+        .passion-item.white .bg-image {
+            opacity: 0.1;
+        }
+
+        .passion-item.dark .content {
+            color: #ffffff;
+        }
+
+        .passion-item.dark .bg-image {
+            opacity: 0.6;
+        }
+
+        /* Offer */
+        .offer-grid {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 48px;
+            flex-wrap: wrap;
+        }
+
+        .offer-card {
+            border: 1px solid #cfc4c5;
+            padding: 32px;
+            width: 256px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .offer-card:hover {
+            border-color: #000000;
+        }
+
+        .offer-card .material-symbols-outlined {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .offer-card h4 {
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 48px;
+            border-top: 1px solid #cfc4c5;
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1280px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-social {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .footer-social .material-symbols-outlined {
+            color: #4c4546;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .footer-social .material-symbols-outlined:hover {
+            color: #000000;
+        }
+
+        .footer-social .phone {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: #4c4546;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .footer-links a {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #4c4546;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #000000;
+            text-decoration: underline;
+        }
+
+        .footer-copy {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: #4c4546;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .passion-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portfolio-grid {
+                height: auto;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .col-span-4 {
+                grid-column: span 1;
+            }
+
+            .flex-col {
+                display: contents;
+            }
+
+            .flex-col .portfolio-item {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section {
+                padding: 48px 16px;
+            }
+
+            .hero-title {
+                font-size: 32px;
+                line-height: 40px;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-images {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .offer-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .offer-card {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-social {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* GSAP reveal classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <header class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <a href="#" class="logo">Mampii Photography</a>
+            <nav class="nav-links">
+                <a href="#home" class="active">Home</a>
+                <a href="#portfolio">Portfolio</a>
+                <a href="#about">About</a>
+                <div class="nav-icons">
+                    <span class="material-symbols-outlined">photo_camera</span>
+                    <span class="material-symbols-outlined">photo_library</span>
+                    <span class="material-symbols-outlined">mail</span>
+                </div>
+                <button class="btn-primary">Contact</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero -->
+        <section class="hero" id="home">
+            <div class="hero-overlay"></div>
+            <div class="hero-image"
+                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfvtw81gJIlBNNsilQgp43_PExsCFPAZPLGiLGo28pM5yM1gT0HgVeSobDbDZT39xdp0eu9QT7ujYAvcel-ypfbBOJ0Yaesh3YoT4mRNRRN5_04dfc6eGgfxJKDiaL-_FzZprHlmkwrFHsxGywo-24h_Qt6Oam_MAaOAPbalj5BRiJhhE3sajoLDlW6fmgUaiFBr4pspDf7FPOO52TUDhgvGxSH8eDd-yGZF8KDCri1aeOI672UnPE');">
+            </div>
+            <div class="hero-content">
+                <h1 class="hero-title">MAMPII</h1>
+                <p class="hero-subtitle">"Immerse yourself in a visual journey where reality meets the imaginary."</p>
+            </div>
+            <div class="scroll-indicator">
+                <span>Scroll Down</span>
+                <span class="material-symbols-outlined">keyboard_double_arrow_down</span>
+            </div>
+        </section>
+
+        <!-- Portfolio -->
+        <section class="section" id="portfolio">
+            <div class="section-title">
+                <h2>Mampii Portfolio</h2>
+                <div class="line"></div>
+            </div>
+
+            <div class="portfolio-grid">
+                <!-- Cinematic -->
+                <div class="portfolio-item col-span-4">
+                    <div class="image"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAtwh-yTiMGrGHQFWwYI9yXYGIXolAUSnpn_o7ZqdM9grAZCE72GTAv8_uHNEOr02y8Pn_55umWCB_yrsRa0OO2pqyRtWvtQDomDCTmKtauld3AJOMgn9GhgVexyLDQGyAFMomwF5Dx6RL7hAO-um0QEPKfmArTcLbqhP1M9h1t9x-Dok0R1BmFJvtyo5b1pzgKJT62M2J3I7QZq964-SSglgYRCYebWxkEXD_BUAnS_mwlgcIYTQdu');">
+                    </div>
+                    <div class="overlay"></div>
+                    <span class="label">Cinematic</span>
+                </div>
+
+                <!-- Portrait -->
+                <div class="portfolio-item col-span-4">
+                    <div class="image"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzdR-cEKxuAmS0_ioeHhSSAnFG6nTpGNmmmmSBPcAhNRa4Wu08p-T2HAhXjtYV0dRzRChjqa6PF_lvfilCLhuQR-j3VPL2r8zikb7pGlUBzNKXYI8YqhajEYI6NQ2sTEmquXyeOknmoZu3ZKMFAHMnHH3MV6gg7-xO5_bDOnEwGh7zokP3qNrRX3S7xWmGCpPrY4hxiAGwg635hLR34QOQb9qD698c5-qfVOGA_AAuKDV9uNWKXjQK');">
+                    </div>
+                    <div class="overlay"></div>
+                    <span class="label">Portrait</span>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-span-4">
+                    <div class="flex-col">
+                        <div class="portfolio-item">
+                            <div class="image"
+                                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC4Pqzv-htMPtL7l9C-wKhr4h8r_AkhPUpS4ywa3it7ZlpjyLQ9_-Jt1rqxaPWhgB27Cajy5ZQD5US9Wxs4_cbYDLZbHKq8xUmohvvgjCvFnVMpKfbTCJt0IF8nfqyuK8Jf0yzhp6mMA8XDd-R1_ZPnAbcPu1gPxIkwQTrtyW0JZGtWDec1LIHjuGdYvk2KLuz22qSlbmieYlK8_k9pIMKg_RJq8koEAdO4Qthnw5TFUpq7YHVISCsq');">
+                            </div>
+                            <div class="overlay"></div>
+                            <span class="label">Real Estate</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <div class="image"
+                                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDwulFxrZGdc2Orx-UeIsXv52J_UUyLGrKexHf9GIhd2kAgijoILC7nDGDx96c4y2GWs6kJzRaNYMFRLo6L7QeP5GwDwcsrwPLBUfT478-jwfwKNuwdIi1lCSQvCQv6t4zwhP7bM0jjyq_VcUIhEt_3XNzF0lIDEcVWgr39hWdI946-W8tXfGY8ON0H7WcQQYpgabSK0mCyuoBUChaTR7c9jQGhL-r652YtNh6OQ6C5JF5wSLPy38FE');">
+                            </div>
+                            <div class="overlay"></div>
+                            <span class="label">Corporate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Culinary -->
+                <div class="portfolio-item col-span-4">
+                    <div class="image"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA4GWnoboXR08tQX5eZ-lDFIlK0_Cq9CBYVKYSRbtu6z7U4XJTXAruAilRjyQwLdXHuefgOQ5TyTeZNHG9u4fLG2k2C9He9MQaWiKsvWoya1_2NR5MIOnaw3QHXo7_xm_82KhTZmybmdt35eKQo2VMLh6uBU-rNhTq-gor15vHSqXPAGa76btWtyZTp6K7iTj76cvWzlDLzTfL4Y5NcU1XTqf1Ou9EwN7FBoUdfauB8l6Jg5rElpZP-');">
+                    </div>
+                    <div class="overlay"></div>
+                    <span class="label">Culinary</span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 48px;">
+                <button class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    Voir plus
+                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_right_alt</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section class="section" style="background: #f3f3f4;" id="about">
+            <div class="about-grid container">
+                <div class="about-images">
+                    <div class="img"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBCsgc8Vp5j9lAtQ4SsVqS8nTc5qHnjBCMR_gcVqMMs_TuL13cRyKIXc3Jd_AjwC-aEuzDiae6MrCa4jI-D5nk1SWvHB5PTMV2tbeHSNWWH41NVHM1FjNvgrmiy9lLrxBxoYplZV9QE0mkLyWNWDgjJjTbgIDy7xigKt2m4ZZFpWsPcdIGS8B07i9WrEYaxP_DJn0HR2rN33J2N9vcEHZ0KnVnPRZPMoYXsZj6Izrci4fZtVEJnC8I-');">
+                    </div>
+                    <div class="img"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQAkPQkboLWPzOygMgGuFIDC29-x5HxOGvf24libeyDGFuFlyM98IBZ94gpCZoWGpVjqn7B_1PhBpgYQ94NRrPNQT2YsG7f-CUlyg8IFzaTQS9_hH8rbVHl7uGg0SexZadhbnFu5Et2cV9_voNJTCakbGzi4UL-tKw2R4rH4K0Rx3xTy7pC-cGhpN0ARkQWA0l3G3hlBWZPkRbZA5deXMO-cIXds7pMwrrBzx6RQyKdJOgAmm8VtKq');">
+                    </div>
+                    <div class="img"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCxBRNtOrTXmULlsudSbJXa_jGCbh8y86zJSMntwwNfshcsaMmIUQ_f-P9dg-3pDrTqpQ37ErL_Fk9-WH4fcr3ZSUwrnAcxVNa8_QUS7m1NacQiUUNGZTlz0GURDBOVPYl9B7soZVC3xjKWOVJlaW6MZbwFZhXHwCwSTISsdIdQy3eztkLrgtAtg-VYuQw9cIRjTANDyUc2JiPz85G2hkFRI30LetZvUCUFWaqhRsnnymF0FoIwEhEd');">
+                    </div>
+                    <div class="img"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBe06fAP7sXNKEyhOowqXeJSfTnBlz1SGJBLpE6mHcFta1cq1jb-47fWkcPOsH2lwfYCWBjOVALl_XadJ34Ln41ZYoQf3DSUOaB7Ib4Tj8uWW_zwRFjQtEEf6Hh0WE_12uSV-pThOn6J1BJqhD1bY2kWxoBWHwJTEf6D-Z9u4ucs4X7_bFwGpHh5k-In82ByhNDXWM078w63uouBuQ3J1QFRc7189z3Os_odS67tV06HgZwcRnidSRB');">
+                    </div>
+                </div>
+                <div class="about-content">
+                    <h2>Artistic Approach</h2>
+                    <p>
+                        In every shot I capture, I weave the threads of a unique story, where emotions come to life and
+                        precious moments are frozen for eternity. Each image is a window onto my journey, revealing
+                        moments of happiness, challenges overcome and dreams in the making. My lens becomes my pen, and
+                        my photos become the words that compose the visual chapters of my existence. Each shot tells a
+                        part of me, fragments of emotions captured in a harmonious dance of light and shadow.
+                    </p>
+                    <button class="btn-primary">View More</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Passion -->
+        <section class="passion-grid">
+            <div class="passion-item dark">
+                <div class="bg-image"
+                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBTIE1kiJqaEx55s1VVeX5yuRE4-j-mVuMbUgXkeRF8V6gmr0CBn-33OffECqYXhR7Rtj9Li9ddUpgybbWbRAMTjTAVXwLRGOJWdkZktXXndPBpOLeeQvENTbmGWIG96tNRaQvdFGSKfygUt05uK-ML3PBTJcjL-jhH50vCAz1CwWPiPdPf7JPMOcPhPn2G_BPVq0RUda2vCvrKpKZH957Ewto1TctF_5GwzB5FuzadEDLvyi6SZDbi');">
+                </div>
+                <div class="content">
+                    <h3>A Look at the World</h3>
+                    <p>Shots that tell the story of my inner journey.</p>
+                </div>
+            </div>
+            <div class="passion-item white">
+                <div class="bg-image"
+                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvMokuOg937QGcC1WZlgmoXAa8CPqL4vSdQnMjaGoqK-EuGPRpALiZbqtfxqogm7ilfImUQH0ihQw8HkLggGPwmjNshkxGW-ot3NjNCURUpPviJuFZSRM0nGcW_9Vlf7waC_tckHnomOK6X1rc6RlmkQIw2rSaqtVsIselLZnxRFCbTI0ZUZWphYlrm9TBJnVoUXUK72KxPc5TjU_NzwBHPqvdINQF7MEzm22k6bNd0BdknGsum9tH');">
+                </div>
+                <div class="content">
+                    <h3>Passion</h3>
+                    <p>
+                        My passion for photography goes far beyond any material considerations. Every moment I capture
+                        is a testament to my commitment to conveying emotions, telling stories and immortalizing the
+                        ephemeral beauty that surrounds us.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Offer -->
+        <section class="section" style="text-align: center;">
+            <h2 class="font-headline-lg" style="letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px;">
+                Offer</h2>
+            <p class="font-body-lg" style="color: #4c4546; max-width: 600px; margin: 0 auto;">
+                Promote your company or personal brand with our services.
+            </p>
+            <div class="offer-grid">
+                <div class="offer-card">
+                    <span class="material-symbols-outlined">business</span>
+                    <h4>Corporate</h4>
+                </div>
+                <div class="offer-card">
+                    <span class="material-symbols-outlined">person</span>
+                    <h4>Personal</h4>
+                </div>
+                <div class="offer-card">
+                    <span class="material-symbols-outlined">restaurant</span>
+                    <h4>Culinary</h4>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-social">
+                <span class="material-symbols-outlined">face_nod</span>
+                <span class="material-symbols-outlined">photo_camera</span>
+                <span class="material-symbols-outlined">movie</span>
+                <span class="material-symbols-outlined">alternate_email</span>
+                <span class="phone">+261 32 85 126 30</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-copy">
+                © Copyright 2023 Mampii Photography
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // GSAP + ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Navbar scroll effect
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            // --- Hero Animation ---
+            const heroTL = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+            heroTL
+                .from('.hero-title', {
+                    duration: 1.2,
+                    opacity: 0,
+                    y: 50,
+                    scale: 0.95
+                })
+                .from('.hero-subtitle', {
+                    duration: 1,
+                    opacity: 0,
+                    y: 30,
+                    ease: 'power2.out'
+                }, '-=0.6')
+                .from('.scroll-indicator', {
+                    duration: 0.8,
+                    opacity: 0,
+                    y: 20,
+                    ease: 'power2.out'
+                }, '-=0.4');
+
+            // --- Portfolio Items ---
+            gsap.utils.toArray('.portfolio-item').forEach((item, i) => {
+                gsap.from(item, {
+                    scrollTrigger: {
+                        trigger: item,
+                        start: 'top 85%',
+                        toggleActions: 'play none none none'
+                    },
+                    duration: 0.8,
+                    opacity: 0,
+                    y: 40,
+                    rotation: i === 0 ? 1 : i === 1 ? -0.5 : 0.5,
+                    scale: 0.97,
+                    ease: 'back.out(1.2)',
+                    delay: i * 0.08
+                });
+            });
+
+            // --- About Section ---
+            gsap.from('.about-images .img', {
+                scrollTrigger: {
+                    trigger: '.about-images',
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.8,
+                opacity: 0,
+                scale: 0.9,
+                stagger: 0.12,
+                ease: 'power2.out'
+            });
+
+            gsap.from('.about-content h2', {
+                scrollTrigger: {
+                    trigger: '.about-content',
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.7,
+                opacity: 0,
+                x: -30,
+                ease: 'power2.out'
+            });
+
+            gsap.from('.about-content p', {
+                scrollTrigger: {
+                    trigger: '.about-content',
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.8,
+                opacity: 0,
+                y: 20,
+                ease: 'power2.out',
+                delay: 0.2
+            });
+
+            gsap.from('.about-content .btn-primary', {
+                scrollTrigger: {
+                    trigger: '.about-content',
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.6,
+                opacity: 0,
+                scale: 0.9,
+                ease: 'back.out(1.4)',
+                delay: 0.4
+            });
+
+            // --- Passion Section ---
+            gsap.from('.passion-item.dark .content', {
+                scrollTrigger: {
+                    trigger: '.passion-item.dark',
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.8,
+                opacity: 0,
+                x: -30,
+                ease: 'power2.out'
+            });
+
+            gsap.from('.passion-item.white .content', {
+                scrollTrigger: {
+                    trigger: '.passion-item.white',
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.8,
+                opacity: 0,
+                x: 30,
+                ease: 'power2.out'
+            });
+
+            // --- Offer Section ---
+            gsap.from('.offer-card', {
+                scrollTrigger: {
+                    trigger: '.offer-grid',
+                    start: 'top 85%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.7,
+                opacity: 0,
+                y: 30,
+                scale: 0.95,
+                stagger: 0.1,
+                ease: 'back.out(1.2)'
+            });
+
+            // --- Footer ---
+            gsap.from('.footer-inner > *', {
+                scrollTrigger: {
+                    trigger: '.footer',
+                    start: 'top 90%',
+                    toggleActions: 'play none none none'
+                },
+                duration: 0.6,
+                opacity: 0,
+                y: 20,
+                stagger: 0.08,
+                ease: 'power2.out'
+            });
+
+            // --- Hover animations on portfolio items ---
+            document.querySelectorAll('.portfolio-item').forEach((item) => {
+                const image = item.querySelector('.image');
+                const overlay = item.querySelector('.overlay');
+
+                item.addEventListener('mouseenter', () => {
+                    gsap.to(image, {
+                        scale: 1.08,
+                        duration: 0.6,
+                        ease: 'power2.out'
+                    });
+                    gsap.to(overlay, {
+                        backgroundColor: 'rgba(0,0,0,0.4)',
+                        duration: 0.3
+                    });
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    gsap.to(image, {
+                        scale: 1,
+                        duration: 0.6,
+                        ease: 'power2.out'
+                    });
+                    gsap.to(overlay, {
+                        backgroundColor: 'rgba(0,0,0,0.2)',
+                        duration: 0.3
+                    });
+                });
+            });
+
+            // --- Floating animation on scroll indicator ---
+            gsap.to('.scroll-indicator .material-symbols-outlined', {
+                y: -8,
+                duration: 1.5,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut'
+            });
+
+            // --- Subtle animation on nav icons ---
+            document.querySelectorAll('.nav-icons .material-symbols-outlined').forEach((icon) => {
+                icon.addEventListener('mouseenter', () => {
+                    gsap.to(icon, {
+                        scale: 1.2,
+                        duration: 0.3,
+                        ease: 'back.out(1.7)'
+                    });
+                });
+                icon.addEventListener('mouseleave', () => {
+                    gsap.to(icon, {
+                        scale: 1,
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                });
+            });
+
+        });
+    </script>
+
+</body>
+
+</html>
