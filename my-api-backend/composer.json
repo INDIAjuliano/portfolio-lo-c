@@ -7,6 +7,7 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "ext-pdo_pgsql": "*",
         "beberlei/doctrineextensions": "*",
         "doctrine/doctrine-bundle": "^2.18",
         "doctrine/doctrine-migrations-bundle": "^3.3",
@@ -38,7 +39,11 @@
             "symfony/runtime": true
         },
         "bump-after-update": true,
-        "sort-packages": true
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.2"
+        }
     },
     "autoload": {
         "psr-4": {
@@ -70,6 +75,9 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "migrate": [
+            "php bin/console doctrine:migrations:migrate --no-interaction --env=prod"
         ]
     },
     "conflict": {

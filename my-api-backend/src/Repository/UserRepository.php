@@ -40,4 +40,13 @@ class UserRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findOneByPseudo(string $pseudo): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.pseudo = :pseudo')
+            ->setParameter('pseudo', $pseudo)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }
