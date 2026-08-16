@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "vercel-build.sh",
+      "use": "@vercel/static-build"
+    },
+    {
+      "src": "dist/app/server/server.mjs",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/dist/app/browser/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/app/server/server.mjs"
+    }
+  ]
+}

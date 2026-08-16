@@ -1,0 +1,817 @@
+<div class="ml-app">
+
+  <main class="ml-main">
+    <div class="ml-container">
+
+      <div class="ml-content">
+      <div class="ml-tabs">
+        <button class="ml-tab" [class.active]="!managePagesTabActive && !textsTabActive" (click)="managePagesTabActive = false; textsTabActive = false">Médiathèque</button>
+        <button class="ml-tab" [class.active]="textsTabActive" (click)="textsTabActive = true; managePagesTabActive = false">Textes</button>
+        <button class="ml-tab" [class.active]="managePagesTabActive" (click)="managePagesTabActive = true; textsTabActive = false">Gestion des pages</button>
+      </div>
+
+      @if (!managePagesTabActive && !textsTabActive) {
+          <div class="ml-page-header">
+            <h2>Médiathèque</h2>
+            <p>Gérez vos images, vidéos et albums multimédias.</p>
+          </div>
+
+          <div class="ml-filter-tabs">
+            <button class="ml-filter-tab" [class.active]="!selectedAlbum" (click)="clearAlbumSelection()">Tout</button>
+            @for (album of albums; track album.id) {
+              @if (album.id !== -1) {
+                <button class="ml-filter-tab" [class.active]="selectedAlbumId === album.id" (click)="selectAlbum(album.id)">{{ album.name }}</button>
+              }
+            }
+          </div>
+
+          <div class="ml-toolbar">
+            <div class="ml-toolbar-left">
+              <div class="ml-search-box">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Rechercher dans la médiathèque...">
+              </div>
+            </div>
+            <div class="ml-toolbar-actions">
+              @if (selectedAlbum) {
+                <button class="ml-btn-back" (click)="clearAlbumSelection()">
+                  <span class="material-symbols-outlined">arrow_back</span>
+                  Retour aux albums
+                </button>
+              }
+              @if (!selectedAlbum) {
+                <div class="ml-view-toggle">
+                  <button class="ml-view-btn" [class.active]="albumViewMode === 'grid'" (click)="albumViewMode = 'grid'">
+                    <span class="material-symbols-outlined">grid_view</span>
+                  </button>
+                  <button class="ml-view-btn" [class.active]="albumViewMode === 'table'" (click)="albumViewMode = 'table'">
+                    <span class="material-symbols-outlined">view_list</span>
+                  </button>
+                </div>
+              }
+              <button class="ml-btn-add" (click)="openCreateMediaModal()">
+                <span class="material-symbols-outlined">add_photo_alternate</span>
+                Ajouter un média
+              </button>
+              <button class="ml-btn-add" (click)="openAddModal()">
+                <span class="material-symbols-outlined">add</span>
+                Ajouter un album
+              </button>
+            </div>
+          </div>
+
+          @if (selectedAlbum) {
+            <div class="ml-album-detail-header">
+              <div class="ml-album-header">
+                <div class="ml-album-cover">
+                  <img [src]="selectedAlbum.cover" [alt]="selectedAlbum.name" loading="lazy">
+                </div>
+                <div class="ml-album-info">
+                  <h3>{{ selectedAlbum.name }}</h3>
+                  <p>{{ selectedAlbum.photosCount }} photo{{ selectedAlbum.photosCount > 1 ? 's' : '' }}</p>
+                  @if (selectedAlbum.page) {
+                    <p class="ml-album-location">{{ getAlbumLocation(selectedAlbum) }}</p>
+                  }
+                </div>
+              </div>
+              <div class="ml-album-type-filters">
+                <button class="ml-filter-type-btn" [class.active]="albumMediaTypeFilter === 'all'" (click)="setAlbumMediaTypeFilter('all')">Tout</button>
+                <button class="ml-filter-type-btn" [class.active]="albumMediaTypeFilter === 'image'" (click)="setAlbumMediaTypeFilter('image')">Images</button>
+                <button class="ml-filter-type-btn" [class.active]="albumMediaTypeFilter === 'video'" (click)="setAlbumMediaTypeFilter('video')">Vidéos</button>
+                @if (!isSelectionMode) {
+                  <button class="ml-filter-type-btn ml-selection-toggle" (click)="toggleSelectionMode()">
+                    <span class="material-symbols-outlined">checklist</span>
+                    Sélection multiple
+                  </button>
+                } @else {
+                  <button class="ml-filter-type-btn ml-selection-toggle" (click)="toggleSelectionMode()">
+                    <span class="material-symbols-outlined">close</span>
+                    Annuler
+                  </button>
+                  <button class="ml-filter-type-btn ml-selection-danger" (click)="deleteSelectedMedia()" [disabled]="selectedMediaIds.size === 0">
+                    <span class="material-symbols-outlined">delete</span>
+                    Supprimer ({{ selectedMediaIds.size }})
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (viewMode === 'grid') {
+              <div class="ml-gallery-grid">
+                @for (img of pagedImages; track img.id) {
+                  <div class="ml-gallery-item" [class.selected]="selectedMediaIds.has(img.id!)" [class.dragging]="draggedMediaId === img.id!" [class.drag-over]="dragOverMediaId === img.id" (click)="onGalleryItemClick(img)" (dblclick)="openLightbox(img.id!)" (dragenter)="onDragEnter(img.id!)" (dragleave)="onDragLeave()">
+                    <div class="ml-image-wrapper">
+                      <img [src]="img.url" [alt]="img.alt" loading="lazy">
+                      <div class="ml-selection-checkbox">
+                        <button class="ml-check-btn" [class.checked]="selectedMediaIds.has(img.id!)" (click)="$event.stopPropagation(); toggleMediaSelection(img.id!)">
+                          <span class="material-symbols-outlined">check</span>
+                        </button>
+                        <button class="ml-handle-btn ml-handle-edit" (click)="$event.stopPropagation(); openEditMediaModalById(img.id)">
+                          <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="ml-handle-btn ml-handle-delete" (click)="$event.stopPropagation(); deleteImage(img.id!)">
+                          <span class="material-symbols-outlined">delete</span>
+                        </button>
+                        <button class="ml-handle-btn ml-handle-publish" [class.published]="img.status === 'published'" (click)="$event.stopPropagation(); togglePublishMedia(img.id!)">
+                          <span class="material-symbols-outlined">{{ img.status === 'published' ? 'visibility_off' : 'visibility' }}</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="ml-image-info">
+                      <div class="ml-meta-top">
+                        <span class="ml-title">{{ img.title }}</span>
+                        <span class="ml-badge-type">{{ img.type }}</span>
+                      </div>
+                      <div class="ml-meta-bottom">
+                        <span class="ml-date">
+                          <span class="material-symbols-outlined">calendar_today</span>
+                          {{ img.date }}
+                        </span>
+                      </div>
+                      @if (img.status === 'draft') {
+                        <div class="ml-draft-label">Brouillon</div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="ml-table-wrapper">
+                <table class="ml-media-table">
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Titre</th>
+                      <th>Catégorie</th>
+                      <th>Type</th>
+                      <th>Date</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (img of pagedImages; track img.id) {
+                      <tr>
+                        <td>
+                          <div class="ml-thumb">
+                            <img [src]="img.url" [alt]="img.alt" loading="lazy">
+                          </div>
+                        </td>
+                        <td>{{ img.title }}</td>
+                        <td>{{ img.category }}</td>
+                        <td>{{ img.type }}</td>
+                        <td>{{ img.date }}</td>
+                        <td>
+                          <span class="ml-status-badge" [class.published]="img.status === 'published'" [class.draft]="img.status === 'draft'">
+                            {{ img.status === 'published' ? 'Publié' : 'Brouillon' }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="ml-row-actions">
+                            <button class="ml-icon-btn" (click)="openEditMediaModalById(img.id)">
+                              <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <button class="ml-icon-btn" [class.published]="img.status === 'published'" (click)="togglePublishMedia(img.id!)">
+                              <span class="material-symbols-outlined">{{ img.status === 'published' ? 'visibility_off' : 'visibility' }}</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            @if (totalPages > 1) {
+              <div class="ml-pagination">
+                <button class="ml-page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                @for (page of [].constructor(totalPages); track $index) {
+                  <button class="ml-page-btn" [class.active]="currentPage === $index + 1" (click)="goToPage($index + 1)">
+                    {{ $index + 1 }}
+                  </button>
+                }
+                <button class="ml-page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+            }
+          } @else {
+            @if (albumViewMode === 'grid') {
+              <div class="ml-albums-grid">
+                @for (album of filteredAlbums; track album.id) {
+                  <div class="ml-album-card" (click)="selectAlbum(album.id!)">
+                    <div class="ml-album-cover">
+                      <img [src]="album.cover" [alt]="album.name" loading="lazy">
+                      <div class="ml-album-overlay">
+                        <div class="ml-album-quick-actions">
+                          <button class="ml-edit-btn" (click)="$event.stopPropagation(); openEditAlbumModal(album)">
+                            <span class="material-symbols-outlined">edit</span>
+                          </button>
+                          <button class="ml-publish-btn" [class.published]="album.status === 'published'" (click)="$event.stopPropagation(); togglePublishAlbum(album.id)">
+                            <span class="material-symbols-outlined">{{ album.status === 'published' ? 'visibility_off' : 'visibility' }}</span>
+                          </button>
+                          <button class="ml-delete-btn" type="button" (click)="$event.stopPropagation(); deleteAlbum(album.id)">
+                            <span class="material-symbols-outlined">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="ml-album-info">
+                      <h4>{{ album.name }}</h4>
+                      <p>{{ album.photosCount }} photo{{ album.photosCount > 1 ? 's' : '' }}</p>
+                      @if (album.page) {
+                        <p class="ml-album-location">{{ getAlbumLocation(album) }}</p>
+                      }
+                      <span class="ml-album-status" [class.published]="album.status === 'published'" [class.draft]="album.status === 'draft'">
+                        {{ album.status === 'published' ? 'Publié' : 'Brouillon' }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="ml-table-wrapper">
+                <table class="ml-media-table">
+                  <thead>
+                    <tr>
+                      <th>Couverture</th>
+                      <th>Nom</th>
+                      <th>Catégorie</th>
+                      <th>Page / Section</th>
+                      <th>Photos</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (album of filteredAlbums; track album.id) {
+                      <tr class="ml-clickable-row" (click)="selectAlbum(album.id!)">
+                        <td>
+                          <div class="ml-thumb">
+                            <img [src]="album.cover" [alt]="album.name" loading="lazy">
+                          </div>
+                        </td>
+                        <td>{{ album.name }}</td>
+                        <td>{{ album.category }}</td>
+                        <td>
+                          @if (album.page) {
+                            <span class="ml-album-location">{{ getAlbumLocation(album) }}</span>
+                          } @else {
+                            <span class="ml-text-muted">-</span>
+                          }
+                        </td>
+                        <td>{{ album.photosCount }}</td>
+                        <td>
+                          <span class="ml-status-badge" [class.published]="album.status === 'published'" [class.draft]="album.status === 'draft'">
+                            {{ album.status === 'published' ? 'Publié' : 'Brouillon' }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="ml-row-actions">
+                            <button class="ml-icon-btn" (click)="$event.stopPropagation(); openEditAlbumModal(album)">
+                              <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <button class="ml-icon-btn" (click)="$event.stopPropagation(); togglePublishAlbum(album.id)">
+                              <span class="material-symbols-outlined">{{ album.status === 'published' ? 'visibility_off' : 'visibility' }}</span>
+                            </button>
+                            <button class="ml-icon-btn" type="button" (click)="$event.stopPropagation(); deleteAlbum(album.id)">
+                              <span class="material-symbols-outlined">delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        } @else if (textsTabActive) {
+          <div class="ml-page-header">
+            <h2>Textes des sections</h2>
+            <p>Modifiez les textes affichés pour chaque section de la page d'accueil.</p>
+          </div>
+
+          <div class="ml-texts-layout">
+            <div class="ml-texts-list">
+              @for (page of sectionPages; track page.id) {
+                <div class="ml-text-item" [class.selected]="selectedSectionPageId === page.id" (click)="selectSectionPage(page)">
+                  <div class="ml-text-item-header">
+                    <span class="ml-text-item-page">{{ page.page }}</span>
+                    <span class="ml-text-item-section">/ {{ page.section }}</span>
+                  </div>
+                  <div class="ml-text-item-title">{{ page.title || 'Sans titre' }}</div>
+                  <button class="ml-icon-btn ml-delete-btn" type="button" (click)="$event.stopPropagation(); deleteSectionPage(page)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              }
+              @if (sectionPages.length === 0) {
+                <div class="ml-empty-state">Aucun texte de section disponible.</div>
+              }
+            </div>
+
+            <div class="ml-texts-editor">
+              @if (selectedSectionPageId) {
+                <div class="ml-texts-form">
+                  @if (isFooterSection) {
+                    <div class="ml-form-group">
+                      <label>Email <span class="ml-char-count">{{ getSectionTextCharCount('title') }}/100</span></label>
+                      <input
+                        type="email"
+                        [(ngModel)]="sectionTextForm.title"
+                        maxlength="100"
+                        placeholder="contact@loic-photography.com"
+                        [disabled]="isSectionTextSubmitting"
+                      />
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Téléphone <span class="ml-char-count">{{ getSectionTextCharCount('description') }}/500</span></label>
+                      <input
+                        type="tel"
+                        [(ngModel)]="sectionTextForm.description"
+                        maxlength="500"
+                        placeholder="+261 32 85 126 30"
+                        [disabled]="isSectionTextSubmitting"
+                      />
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Copyright <span class="ml-char-count">{{ getSectionTextCharCount('content') }}/1000</span></label>
+                      <textarea
+                        [(ngModel)]="sectionTextForm.content"
+                        maxlength="1000"
+                        rows="3"
+                        placeholder="© 2026 LOÏC Photography. All rights reserved."
+                        [disabled]="isSectionTextSubmitting"
+                      ></textarea>
+                    </div>
+                  } @else {
+                    <div class="ml-form-group">
+                      <label>Titre <span class="ml-char-count">{{ getSectionTextCharCount('title') }}/100</span></label>
+                      <input
+                        type="text"
+                        [(ngModel)]="sectionTextForm.title"
+                        maxlength="100"
+                        placeholder="Titre de la section"
+                        [disabled]="isSectionTextSubmitting"
+                      />
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Description <span class="ml-char-count">{{ getSectionTextCharCount('description') }}/500</span></label>
+                      <textarea
+                        [(ngModel)]="sectionTextForm.description"
+                        maxlength="500"
+                        rows="3"
+                        placeholder="Description de la section..."
+                        [disabled]="isSectionTextSubmitting"
+                      ></textarea>
+                    </div>
+                    <div class="ml-form-group">
+                      <label>Contenu <span class="ml-char-count">{{ getSectionTextCharCount('content') }}/1000</span></label>
+                      <textarea
+                        [(ngModel)]="sectionTextForm.content"
+                        maxlength="1000"
+                        rows="5"
+                        placeholder="Contenu additionnel..."
+                        [disabled]="isSectionTextSubmitting"
+                      ></textarea>
+                    </div>
+                  }
+                  <div class="ml-modal-footer">
+                    <button class="ml-modal-btn ml-modal-btn-cancel" (click)="selectSectionPage(null)" [disabled]="isSectionTextSubmitting">Annuler</button>
+                    <button class="ml-modal-btn ml-modal-btn-validate" (click)="saveSectionText()" [disabled]="isSectionTextSubmitting">
+                      @if (isSectionTextSubmitting) {
+                        Enregistrement...
+                      } @else {
+                        Enregistrer
+                      }
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="ml-empty-state">Sélectionnez un texte de section pour le modifier.</div>
+              }
+            </div>
+          </div>
+        } @else {
+          <app-manage-pages></app-manage-pages>
+        }
+      </div>
+    </div>
+  </main>
+</div>
+
+@if (showAddModal) {
+  <div class="ml-modal-overlay" (click)="closeAddModal()">
+    <div class="ml-modal-container" (click)="$event.stopPropagation()">
+      <div class="ml-modal-header">
+        <h3 class="ml-modal-title">{{ editingAlbumId ? 'Modifier l\'album' : 'Nouvel album' }}</h3>
+        <button class="ml-modal-close" (click)="closeAddModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="ml-modal-body">
+        <div class="ml-form-group">
+          <label for="albumTitle">Titre *</label>
+          <input
+            type="text"
+            id="albumTitle"
+            [(ngModel)]="newAlbum.title"
+            placeholder="Titre de l'album"
+            [disabled]="isSubmitting"
+          />
+        </div>
+        <div class="ml-form-group">
+          <label>Source de la couverture</label>
+          <div class="ml-radio-group">
+            <label class="ml-radio-label">
+              <input type="radio" name="coverSource" value="url" [(ngModel)]="coverSource" [disabled]="isSubmitting">
+              <span>URL image</span>
+            </label>
+            <label class="ml-radio-label">
+              <input type="radio" name="coverSource" value="file" [(ngModel)]="coverSource" [disabled]="isSubmitting">
+              <span>Cover image</span>
+            </label>
+          </div>
+        </div>
+        @if (coverSource === 'url') {
+          <div class="ml-form-group">
+            <label for="albumCoverUrl">Cover URL</label>
+            <input
+              type="text"
+              id="albumCoverUrl"
+              [(ngModel)]="newAlbum.coverUrl"
+              placeholder="https://example.com/cover.jpg"
+              [disabled]="isSubmitting"
+            />
+            @if (newAlbum.coverUrl) {
+              <div class="ml-cover-preview">
+                <img [src]="newAlbum.coverUrl" alt="Cover preview">
+                <button type="button" class="ml-cover-remove" (click)="newAlbum.coverUrl = '';">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="ml-form-group">
+            <label>Cover image</label>
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onCoverFileSelected($event)"
+              [disabled]="isSubmitting"
+            />
+            @if (coverPreview) {
+              <div class="ml-cover-preview">
+                <img [src]="coverPreview" alt="Cover preview">
+                <button type="button" class="ml-cover-remove" (click)="coverPreview = null; newAlbum.coverUrl = ''; coverFile = null;">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+        <div class="ml-form-group">
+          <label for="albumCategory">Catégorie *</label>
+          <select
+            id="albumCategory"
+            [(ngModel)]="newAlbum.categoryId"
+            [disabled]="isSubmitting || categories.length === 0"
+          >
+            @if (categories.length === 0) {
+              <option value="">Chargement des catégories...</option>
+            } @else {
+              @for (cat of categories; track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            }
+          </select>
+        </div>
+        <div class="ml-form-group">
+          <label for="albumPage">Page</label>
+          <select
+            id="albumPage"
+            [(ngModel)]="newAlbum.page"
+            [disabled]="isSubmitting"
+          >
+            <option value="">Aucune</option>
+            @for (p of carouselPages(); track p.value) {
+              <option [value]="p.value">{{ p.label }}</option>
+            }
+          </select>
+        </div>
+        @if (newAlbum.page) {
+          <div class="ml-form-group">
+            <label for="albumSection">Section</label>
+            <select
+              id="albumSection"
+              [(ngModel)]="newAlbum.section"
+              [disabled]="isSubmitting"
+            >
+              <option value="">Aucune</option>
+              @for (s of carouselSections(newAlbum.page); track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="ml-form-group">
+          <label>Médias de l'album</label>
+          <select
+            multiple
+            [(ngModel)]="newAlbum.mediaIds"
+            [disabled]="isSubmitting || mediaItems.length === 0"
+          >
+            @if (mediaItems.length === 0) {
+              <option value="">Chargement des médias...</option>
+            } @else {
+              @for (media of mediaItems; track media.id) {
+                <option [value]="media.id">{{ media.title }} ({{ media.type }})</option>
+              }
+            }
+          </select>
+          <small class="ml-form-hint">Maintenez Ctrl/Cmd pour sélectionner plusieurs médias</small>
+        </div>
+        <div class="ml-form-group">
+          <label for="albumDescription">Description</label>
+          <textarea
+            id="albumDescription"
+            [(ngModel)]="newAlbum.description"
+            rows="3"
+            placeholder="Description de l'album..."
+            [disabled]="isSubmitting"
+          ></textarea>
+        </div>
+      </div>
+      <div class="ml-modal-footer">
+        <button class="ml-modal-btn ml-modal-btn-cancel" (click)="closeAddModal()" [disabled]="isSubmitting">Annuler</button>
+        <button class="ml-modal-btn ml-modal-btn-validate" (click)="submitAlbum()" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            {{ editingAlbumId ? 'Modification...' : 'Création...' }}
+          } @else {
+            {{ editingAlbumId ? 'Modifier' : 'Créer l\'album' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showMediaModal) {
+  <div class="ml-modal-overlay" (click)="closeMediaModal()">
+    <div class="ml-modal-container" (click)="$event.stopPropagation()">
+      <div class="ml-modal-header">
+        <h3 class="ml-modal-title">
+          {{ isEditingMedia ? 'Modifier le média' : 'Nouveau média' }}
+          @if (currentAlbumId) {
+            <span class="ml-modal-subtitle"> pour l'album #{{ currentAlbumId }}</span>
+          }
+        </h3>
+        <button class="ml-modal-close" (click)="closeMediaModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="ml-modal-body">
+        <div class="ml-form-group">
+          <label for="mediaTitle">Titre *</label>
+          <input
+            type="text"
+            id="mediaTitle"
+            [(ngModel)]="mediaForm.title"
+            placeholder="Titre du média"
+            [disabled]="isMediaSubmitting"
+          />
+        </div>
+        <div class="ml-form-group">
+          <label for="mediaSlug">Slug</label>
+          <input
+            type="text"
+            id="mediaSlug"
+            [(ngModel)]="mediaForm.slug"
+            placeholder="slug-auto-genere"
+            [disabled]="isMediaSubmitting"
+          />
+        </div>
+        <div class="ml-form-group">
+          <label for="mediaType">Type *</label>
+          <select
+            id="mediaType"
+            [(ngModel)]="mediaForm.type"
+            (ngModelChange)="onMediaTypeChange()"
+            [disabled]="isMediaSubmitting"
+          >
+            <option value="image">Image</option>
+            <option value="video">Vidéo</option>
+          </select>
+        </div>
+
+        <div class="ml-form-group">
+          <label>Source du média</label>
+          <div class="ml-radio-group">
+            <label class="ml-radio-label">
+              <input type="radio" name="mediaSource" value="url" [(ngModel)]="mediaSource" [disabled]="isMediaSubmitting">
+              <span>URL</span>
+            </label>
+            <label class="ml-radio-label">
+              <input type="radio" name="mediaSource" value="file" [(ngModel)]="mediaSource" [disabled]="isMediaSubmitting">
+              <span>Fichier</span>
+            </label>
+          </div>
+        </div>
+        @if (mediaSource === 'url') {
+          <div class="ml-form-group">
+            <label for="mediaImageUrl">URL Image</label>
+            <input
+              type="text"
+              id="mediaImageUrl"
+              [(ngModel)]="mediaForm.imageUrl"
+              placeholder="https://..."
+              [disabled]="isMediaSubmitting"
+            />
+          </div>
+          <div class="ml-form-group">
+            <label for="mediaVideoUrl">URL Vidéo</label>
+            <input
+              type="text"
+              id="mediaVideoUrl"
+              [(ngModel)]="mediaForm.videoUrl"
+              placeholder="https://..."
+              [disabled]="isMediaSubmitting"
+            />
+          </div>
+        } @else {
+          <div class="ml-form-group">
+            <label>{{ mediaForm.type === 'video' ? 'Vidéos (max 1)' : 'Images (max 10)' }}</label>
+            <input
+              type="file"
+              [attr.accept]="mediaForm.type === 'video' ? 'video/mp4,video/avi,video/x-msvideo' : 'image/jpeg,image/jpg,image/png,image/webp,image/gif'"
+              [multiple]="mediaForm.type === 'image'"
+              [disabled]="mediaForm.type === 'video' || isMediaSubmitting || mediaFiles.length >= 10"
+              (change)="onMediaFilesSelected($event)"
+            />
+            @if (mediaForm.type === 'video') {
+              <small class="ml-form-hint">Upload de vidéos multiples non disponible. Utilisez l'URL pour les vidéos.</small>
+            }
+            @if (mediaPreviews.length > 0) {
+              <div class="ml-media-previews">
+                @for (preview of mediaPreviews; track $index) {
+                  <div class="ml-media-preview">
+                    <img [src]="preview" alt="Preview">
+                    <button type="button" class="ml-media-preview-remove" (click)="removeMediaFile($index)">
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+        <div class="ml-form-group">
+          <label for="mediaDescription">Description</label>
+          <textarea
+            id="mediaDescription"
+            [(ngModel)]="mediaForm.description"
+            rows="3"
+            placeholder="Description..."
+            [disabled]="isMediaSubmitting"
+          ></textarea>
+        </div>
+        <div class="ml-form-group">
+          <label for="mediaTags">Tags (séparés par des virgules)</label>
+          <input
+            type="text"
+            id="mediaTags"
+            [(ngModel)]="tagsInput"
+            (input)="updateTagsFromInput()"
+            placeholder="nature, mariage, portrait"
+            [disabled]="isMediaSubmitting"
+          />
+        </div>
+        <div class="ml-form-group ml-checkbox-group">
+          <label class="ml-checkbox-label">
+            <input type="checkbox" [(ngModel)]="mediaForm.isPublished" [disabled]="isMediaSubmitting">
+            <span>Publié</span>
+          </label>
+          <label class="ml-checkbox-label">
+            <input type="checkbox" [(ngModel)]="mediaForm.isFeatured" [disabled]="isMediaSubmitting">
+            <span>Mis en avant</span>
+          </label>
+        </div>
+      </div>
+      <div class="ml-modal-footer">
+        <button class="ml-modal-btn ml-modal-btn-cancel" (click)="closeMediaModal()" [disabled]="isMediaSubmitting">Annuler</button>
+        <button class="ml-modal-btn ml-modal-btn-validate" (click)="submitMediaForm()" [disabled]="isMediaSubmitting">
+          @if (isMediaSubmitting) {
+            Enregistrement...
+          } @else {
+            {{ isEditingMedia ? 'Enregistrer' : 'Créer' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showMediaActions && selectedMedia) {
+  <div class="ml-modal-overlay" (click)="closeMediaActions()">
+    <div class="ml-modal-container ml-modal-container-sm" (click)="$event.stopPropagation()">
+      <div class="ml-modal-header">
+        <h3 class="ml-modal-title">{{ selectedMedia.title }}</h3>
+        <button class="ml-modal-close" (click)="closeMediaActions()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="ml-modal-body ml-modal-body-actions">
+        <div class="ml-action-grid">
+          <button class="ml-action-card" (click)="openEditMediaModalById(selectedMedia.id); closeMediaActions()">
+            <span class="material-symbols-outlined">edit</span>
+            <span>Modifier</span>
+          </button>
+          <button class="ml-action-card ml-action-danger" (click)="deleteImage(selectedMedia.id); closeMediaActions()">
+            <span class="material-symbols-outlined">delete</span>
+            <span>Supprimer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDeleteConfirm) {
+  <div class="ml-modal-overlay" (click)="closeDeleteConfirm()">
+    <div class="ml-modal-container ml-modal-container-sm" (click)="$event.stopPropagation()">
+      <div class="ml-modal-header">
+        <h3 class="ml-modal-title">Confirmer la suppression</h3>
+        <button class="ml-modal-close" (click)="closeDeleteConfirm()" [disabled]="isDeleteSubmitting">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="ml-modal-body ml-modal-body-confirm">
+        <div class="ml-confirm-icon">
+          <span class="material-symbols-outlined">warning</span>
+        </div>
+        <p class="ml-confirm-text">
+          Êtes-vous sûr de vouloir supprimer {{ deleteConfirmType === 'media' && selectedMediaIds.size > 1 ? 'ces ' + selectedMediaIds.size + ' médias' : 'ce média' }} ?
+          Cette action est irréversible.
+        </p>
+      </div>
+      <div class="ml-modal-footer">
+        <button class="ml-modal-btn ml-modal-btn-cancel" (click)="closeDeleteConfirm()" [disabled]="isDeleteSubmitting">Annuler</button>
+        <button class="ml-modal-btn ml-modal-btn-danger" (click)="confirmDelete()" [disabled]="isDeleteSubmitting">
+          @if (isDeleteSubmitting) {
+            Suppression...
+          } @else {
+            Supprimer
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showPreview && previewMedia) {
+  <div class="ml-modal-overlay ml-preview-overlay" (click)="closePreview()">
+    <div class="ml-modal-container ml-preview-container" (click)="$event.stopPropagation()">
+      <button class="ml-modal-close" (click)="closePreview()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="ml-preview-main">
+        <button class="ml-preview-nav ml-preview-prev" (click)="$event.stopPropagation(); navigatePreview(-1)">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="ml-preview-content">
+          @if (previewMedia.type === 'video') {
+            <video [src]="previewMedia.url" controls autoplay class="ml-preview-video"></video>
+          } @else {
+            <img [src]="previewMedia.url" [alt]="previewMedia.title">
+          }
+        </div>
+        <button class="ml-preview-nav ml-preview-next" (click)="$event.stopPropagation(); navigatePreview(1)">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+      <div class="ml-preview-carousel">
+        @for (img of filteredImages; track img.id; let idx = $index) {
+          <div class="ml-preview-thumb" [class.active]="idx === previewIndex" (click)="$event.stopPropagation(); previewIndex = idx; previewMedia = { url: img.url, type: img.type === 'Vidéo' ? 'video' : 'image', title: img.title }">
+            <img [src]="img.url" [alt]="img.title">
+          </div>
+        }
+      </div>
+      <div class="ml-preview-title">{{ previewMedia.title }}</div>
+    </div>
+  </div>
+}
+
+@if (showToast) {
+  <div class="ml-toast-container" [class.ml-toast-success]="toastType === 'success'" [class.ml-toast-error]="toastType === 'error'">
+    <div class="ml-toast-icon">
+      <span class="material-symbols-outlined">{{ toastType === 'success' ? 'check_circle' : 'error' }}</span>
+    </div>
+    <div class="ml-toast-message">{{ toastMessage }}</div>
+    <div class="ml-toast-progress" [style.width.%]="toastProgress"></div>
+  </div>
+}

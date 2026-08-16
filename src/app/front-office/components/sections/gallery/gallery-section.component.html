@@ -1,0 +1,107 @@
+<!-- HERO GALERIE -->
+<app-hero-gallery></app-hero-gallery>
+<!-- FILTRES -->
+<section class="gallery-filters">
+  <div class="gallery-inner">
+    <div class="filters-wrapper">
+      <button class="filter-btn" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">Tous</button>
+      @for (cat of categories; track cat) {
+        <button class="filter-btn" [class.active]="currentFilter === cat" (click)="setFilter(cat)">{{ cat }}</button>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- GRILLE GALERIE -->
+<section class="gallery-grid-section">
+  <div class="gallery-inner">
+    @if (isLoading) {
+      <div class="gallery-loading">Chargement...</div>
+    } @else {
+      <div class="pexels-grid" #galleryGrid>
+        @for (item of getFilteredItems(); track item.id; let i = $index) {
+          <div class="pexels-item" (dblclick)="openLightbox(i)">
+            @if (item.video) {
+              <video [src]="item.video" muted loop class="masonry-media"></video>
+            } @else {
+              <img [src]="item.image" [alt]="item.title" loading="lazy" class="masonry-img">
+            }
+            <div class="pexels-overlay">
+              <span class="category-tag">{{ item.category }}</span>
+              <span class="title">{{ item.title }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (hasMore) {
+        <div class="scroll-load-more" data-scroll-infinite-trigger appScrollInfinite (scrollReached)="onScrollReached()">
+          @if (isLoadingMore) {
+            <div class="scroll-loader">
+              <div class="scroll-loader-dot"></div>
+              <div class="scroll-loader-dot"></div>
+              <div class="scroll-loader-dot"></div>
+            </div>
+          } @else {
+            <span class="scroll-load-text">Charger plus</span>
+          }
+        </div>
+      }
+    }
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="lightbox-overlay" [class.active]="lightboxOpen" (click)="onLightboxOverlayClick($event)">
+  <div class="lightbox-content" [class.fullscreen]="isFullscreen">
+    @if (currentLightboxItem) {
+      <div class="lightbox-top">
+        <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close">
+          <app-icon name="close" size="24"></app-icon>
+        </button>
+        <div class="lightbox-top-actions">
+          <button class="lightbox-nav lightbox-nav-prev" (click)="navigateGallery(-1)" aria-label="Previous">
+            <app-icon name="arrow-left" size="24"></app-icon>
+          </button>
+          <button class="lightbox-action-btn" (click)="toggleFullscreen()" aria-label="Plein écran">
+            <app-icon [name]="isFullscreen ? 'fullscreen_exit' : 'fullscreen'" size="20"></app-icon>
+          </button>
+          <button class="lightbox-nav lightbox-nav-next" (click)="navigateGallery(1)" aria-label="Next">
+            <app-icon name="arrow-right" size="24"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="lightbox-main">
+        <div class="lightbox-media">
+          @if (currentLightboxItem.video) {
+            <video [src]="currentLightboxItem.video" controls autoplay class="lightbox-video"></video>
+          } @else {
+            <img [src]="currentLightboxItem.large || currentLightboxItem.image" [alt]="currentLightboxItem.title">
+          }
+        </div>
+      </div>
+
+      <div class="lightbox-bottom">
+        <div class="lightbox-counter">
+          {{ currentGalleryIndex + 1 }} / {{ currentFilteredItems.length }}
+        </div>
+
+        <div class="lightbox-carousel">
+          @for (item of currentFilteredItems; track item.id; let idx = $index) {
+            <div class="carousel-thumb"
+                 [class.active]="idx === currentGalleryIndex"
+                 (click)="goToSlide(idx)">
+              <img [src]="item.image" [alt]="item.title">
+            </div>
+          }
+        </div>
+
+        <div class="lightbox-info" *ngIf="currentLightboxItem">
+          <div class="lb-title">{{ currentLightboxItem.title }}</div>
+          <div class="lb-category">{{ currentLightboxItem.category }}</div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

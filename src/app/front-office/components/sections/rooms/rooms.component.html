@@ -1,0 +1,49 @@
+<section class="rooms" id="services">
+  <div class="rooms-inner">
+    <div class="rooms-title-row">
+      <div>
+        <div class="tag-line rv">Services</div>
+        <h2 class="big-serif rv d1" [innerHTML]="sectionPage?.title || 'Photography <em>packages</em>'"></h2>
+      </div>
+      <a class="btn-ghost rv" href="#portfolio">View portfolio</a>
+    </div>
+
+    <div class="rooms-grid">
+      @if (packages.length > 0) {
+        <div class="r-card r-main">
+          <img class="r-img"
+            [src]="packages[0].image"
+            [alt]="packages[0].alt || 'Wedding Session'" loading="lazy">
+          <div class="r-info">
+            <p class="r-type">{{ packages[0].type || 'Signature' }}</p>
+            <h3 class="r-name">{{ packages[0].title || packages[0].name || 'Wedding & Engagement' }}</h3>
+          </div>
+        </div>
+        <div>
+          @if (packages[1]) {
+            <div class="r-card" style="margin-bottom:3px">
+              <img class="r-img"
+                [src]="packages[1].image"
+                [alt]="packages[1].alt || 'Portrait Session'" loading="lazy">
+              <div class="r-info">
+                <p class="r-type">{{ packages[1].type || 'Portrait' }}</p>
+                <h3 class="r-name">{{ packages[1].title || packages[1].name || 'Professional Portrait' }}</h3>
+              </div>
+            </div>
+          }
+          @if (packages[2]) {
+            <div class="r-card">
+              <img class="r-img"
+                [src]="packages[2].image"
+                [alt]="packages[2].alt || 'Event Session'" loading="lazy">
+              <div class="r-info">
+                <p class="r-type">{{ packages[2].type || 'Events' }}</p>
+                <h3 class="r-name">{{ packages[2].title || packages[2].name || 'Corporate & Private Events' }}</h3>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</section>

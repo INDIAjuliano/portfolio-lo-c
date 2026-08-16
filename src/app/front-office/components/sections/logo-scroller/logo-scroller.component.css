@@ -1,0 +1,145 @@
+.logo-scroller {
+  padding: 96px 0px;
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.logo-scroller-header {
+  text-align: center;
+  padding: 0 16px 32px;
+}
+
+.logo-scroller-title {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.logo-scroller-description {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--text-secondary);
+  margin: 16px 0 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.logo-scroller-content {
+  padding: 120px 0;
+}
+
+.logo-scroller-items {
+  margin: -58px 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+.logo-scroller-row {
+  display: flex;
+  position: relative;
+  white-space: nowrap;
+  justify-content: space-around;
+  gap: 40px;
+  animation: logo-scroller-marquee 30s linear infinite;
+  will-change: transform;
+}
+
+.logo-scroller-item {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 150px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-scroller-item span {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+
+.logo-scroller-item span img {
+  max-width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+  display: block;
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transition: filter 0.4s ease, opacity 0.4s ease, transform 0.4s ease;
+}
+
+.logo-scroller-items:hover .logo-scroller-row {
+  animation-play-state: paused;
+}
+
+.logo-scroller-item:hover span img {
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+@keyframes logo-scroller-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .logo-scroller-item span img {
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-scroller-content {
+    padding: 80px 0;
+  }
+
+  .logo-scroller-items {
+    margin: -40px 0;
+    overflow: visible;
+  }
+
+  .logo-scroller-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    animation: none;
+    transform: none;
+  }
+
+  .logo-scroller-item {
+    flex: 0 0 calc(50% - 12px);
+    min-width: 120px;
+  }
+
+  .logo-scroller-item span img {
+    max-height: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-scroller-item {
+    flex: 0 0 calc(33.333% - 16px);
+    min-width: 100px;
+  }
+
+  .logo-scroller-item span img {
+    max-height: 60px;
+  }
+}

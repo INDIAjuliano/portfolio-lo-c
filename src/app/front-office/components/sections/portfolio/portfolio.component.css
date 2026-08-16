@@ -1,0 +1,121 @@
+.rooms-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 64px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(184, 150, 90, 0.12);
+}
+
+.rooms-title-row .tag-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.rooms-title-row .tag-line::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.rooms-title-row .big-serif {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.rooms-title-row .big-serif em {
+  font-style: italic;
+  color: var(--accent-light);
+}
+
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  height: 800px;
+}
+
+.portfolio-item {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  height: 100%;
+  transition: border-color 0.4s ease;
+}
+
+.portfolio-item .image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.7s ease;
+}
+
+.portfolio-item:hover .image { transform: scale(1.1); }
+
+.portfolio-item .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.3s;
+}
+
+.portfolio-item:hover .overlay { background: rgba(0, 0, 0, 0.4); }
+
+.portfolio-item .label {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 10;
+  color: #ffffff;
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.portfolio-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.col-span-4 { grid-column: span 4; }
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
+
+.flex-col .portfolio-item { height: 50%; }
+
+@media (max-width: 1024px) {
+  .portfolio-grid {
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+  .col-span-4 { grid-column: span 1; }
+  .flex-col { display: contents; }
+  .flex-col .portfolio-item { height: 300px; }
+}
+
+@media (max-width: 768px) {
+  .portfolio-grid { grid-template-columns: 1fr; }
+}

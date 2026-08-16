@@ -1,0 +1,114 @@
+<div class="admin-layout">
+  <!-- Sidebar Toggle -->
+  <div class="sidebar-toggle-wrap" id="sidebarToggleWrap">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" (click)="toggleSidebar()">
+      <app-icon [name]="sidebarToggleIcon" size="18"></app-icon>
+      <span class="tooltip">{{ sidebarTooltip }}</span>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">IJ</div>
+      <div class="brand-text">Photo<span>.</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Library</div>
+      <a routerLink="/admin/media-library" routerLinkActive="active">
+        <app-icon name="photo_library" size="20"></app-icon>
+        Media library
+      </a>
+      <a routerLink="/admin/categories" routerLinkActive="active">
+        <app-icon name="category" size="20"></app-icon>
+        Categories
+      </a>
+      <a routerLink="/admin/partners" routerLinkActive="active">
+        <app-icon name="handshake" size="20"></app-icon>
+        Partners
+      </a>
+      <a routerLink="/admin/about-me" routerLinkActive="active">
+        <app-icon name="person" size="20"></app-icon>
+        About me
+      </a>
+      <div class="nav-label">Appearance</div>
+
+      <div class="nav-label">Language</div>
+      <div class="lang-select">
+        <button class="lang-select-btn" (click)="toggleLangMenu()">
+          <app-icon name="language" size="20"></app-icon>
+          <span>{{ currentLangLabel }}</span>
+          <app-icon name="expand_more" size="18"></app-icon>
+        </button>
+        <div class="lang-menu" [class.open]="isLangMenuOpen">
+          @for (lang of languages; track lang.code) {
+            <button class="lang-item" [class.active]="currentLang === lang.code" (click)="selectLang(lang.code)">
+              <span class="lang-flag">{{ lang.flag }}</span>
+              <span class="lang-name">{{ lang.name }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+            <a routerLink="/admin/theme" routerLinkActive="active">
+              <app-icon name="palette" size="20"></app-icon>
+              Theme
+            </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div>
+          <h1>Dashboard</h1>
+          <div class="subtitle" id="pageSubtitle">Welcome back, Alexander</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="theme-toggle" (click)="toggleTheme()">
+          <app-icon [name]="isDark ? 'light_mode' : 'dark_mode'" size="20"></app-icon>
+          <span>{{ isDark ? 'Clair' : 'Sombre' }}</span>
+        </button>
+        <button class="hamburger" [class.active]="isDropdownOpen" (click)="toggleDropdown(); $event.stopPropagation()" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="user-menu" id="userMenu">
+          <button class="user-btn" id="userBtn" (click)="toggleDropdown(); $event.stopPropagation()">
+            <div class="user-avatar-sm">{{ userInitials }}</div>
+            <span class="user-name">{{ userName }}</span>
+            <app-icon name="expand_more" size="18"></app-icon>
+          </button>
+          <div class="user-dropdown" id="userDropdown" [class.open]="isDropdownOpen" (click)="$event.stopPropagation()">
+            <div class="dropdown-user-info">
+              <div class="dropdown-name">{{ userName }}</div>
+              <div class="dropdown-email">{{ userEmail }}</div>
+            </div>
+            <button class="dropdown-item" data-action="help" (click)="showSiteInfo(); closeDropdown()">
+              <app-icon name="info" size="20"></app-icon>
+              Info du site
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" (click)="logout()">
+              <app-icon name="logout" size="20"></app-icon>
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+     <router-outlet></router-outlet>
+
+     <footer class="admin-footer">
+       <span>© {{ currentYear }} LOÏC Photography. Admin.</span>
+     </footer>
+   </main>
+</div>

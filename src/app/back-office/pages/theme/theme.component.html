@@ -1,0 +1,294 @@
+<div class="theme-studio">
+  <!-- Top Navigation -->
+  <div class="admin-tabs">
+    <button class="admin-tab" [class.active]="!managePagesTabActive" (click)="managePagesTabActive = false">Theme</button>
+    <button class="admin-tab" [class.active]="managePagesTabActive" (click)="managePagesTabActive = true">Manage Pages</button>
+  </div>
+
+  <main class="studio-main">
+
+    <div class="studio-layout">
+      <!-- Main Content -->
+      <div class="studio-content">
+        <div class="tab-panel" [class.hidden]="managePagesTabActive">
+        <!-- Current Theme -->
+        <section class="studio-section">
+          <div class="studio-section-header">
+            <h3 class="studio-section-title">Thème actuel</h3>
+            <button class="studio-link" (click)="selectTheme(selectedTheme)">Actualiser</button>
+          </div>
+          <div class="glass-panel studio-current-theme">
+            <div class="studio-current-grid">
+              <div class="studio-current-image">
+                <img [src]="selectedTheme.previewImage" alt="Current theme preview">
+                <span class="studio-badge">ACTIF</span>
+              </div>
+              <div class="studio-current-info">
+                <h4 class="studio-current-name">{{ selectedTheme.name }}</h4>
+                <p class="studio-current-desc">{{ selectedTheme.description || 'Thème sélectionné dans le portail admin. Appliqué automatiquement sur toutes les pages du site.' }}</p>
+                <div class="studio-swatches-row">
+                  <div class="studio-swatch" [style.background]="selectedTheme.accent"></div>
+                  <div class="studio-swatch" [style.background]="selectedTheme.buttonBg"></div>
+                  <div class="studio-swatch" [style.background]="selectedTheme.light"></div>
+                  <div class="studio-swatch" [style.background]="selectedTheme.text"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Discover -->
+        <section class="studio-section">
+          <div class="studio-section-header">
+            <h3 class="studio-section-title">Découvrir</h3>
+            <div class="studio-view-toggles">
+              <button class="studio-toggle-btn active">
+                <app-icon name="apps" collection="ic" size="20"></app-icon>
+              </button>
+              <button class="studio-toggle-btn">
+                <app-icon name="view-list" collection="ic" size="20"></app-icon>
+              </button>
+              <button class="studio-link" (click)="openCreateModal()">+ Nouveau thème</button>
+            </div>
+          </div>
+
+          @if (isLoading) {
+            <p class="loading-text">Chargement des thèmes...</p>
+          }
+
+          @if (errorMessage) {
+            <p class="error-text">{{ errorMessage }}</p>
+          }
+
+          <div class="studio-grid">
+            @for (theme of themes; track theme.slug) {
+              <div class="glass-panel studio-card" [class.active]="selectedTheme.name === theme.name" (click)="openThemeModal(theme)">
+                <div class="studio-card-image">
+                  <img [src]="theme.previewImage" [alt]="theme.name + ' preview'">
+                  <div class="studio-card-overlay">
+                    <button class="studio-preview-btn">Aperçu</button>
+                    <button class="studio-fav-btn">
+                      <app-icon name="favorite" collection="ic" size="20"></app-icon>
+                    </button>
+                  </div>
+                </div>
+                <div class="studio-card-body">
+                  <div class="studio-card-header">
+                    <h5 class="studio-card-title">{{ theme.name }}</h5>
+                    <span class="studio-badge-sm" [class.premium]="theme.price && +theme.price > 0" [class.free]="!theme.price || +theme.price === 0">
+                      {{ theme.price && +theme.price > 0 ? 'PREMIUM' : 'GRATUIT' }}
+                    </span>
+                  </div>
+                  <p class="studio-card-desc">{{ theme.description }}</p>
+                </div>
+                <div class="studio-card-footer">
+                  <span class="studio-card-author">Thème serveur</span>
+                  <div class="studio-card-actions">
+                    <button class="studio-install-btn" [class.installed]="selectedTheme.name === theme.name" (click)="$event.stopPropagation(); selectTheme(theme)" title="{{ selectedTheme.name === theme.name ? 'Actif' : 'Appliquer' }}">
+                      @if (selectedTheme.name === theme.name) {
+                        <app-icon name="check" collection="ic" size="18"></app-icon>
+                      } @else {
+                        <app-icon name="download" collection="ic" size="18"></app-icon>
+                      }
+                    </button>
+                    <button class="studio-edit-btn" (click)="$event.stopPropagation(); openEditModal(theme)" title="Modifier">
+                      <app-icon name="edit" collection="ic" size="18"></app-icon>
+                    </button>
+                    <button class="studio-delete-btn" (click)="$event.stopPropagation(); deleteTheme(theme)" title="Supprimer">
+                      <app-icon name="delete" collection="ic" size="18"></app-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Theme Customization Modal -->
+  @if (showThemeModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            @if (pendingTheme) {
+              Personnaliser le thème : {{ pendingTheme.name }}
+            } @else if (isEditing) {
+              Modifier le thème
+            } @else {
+              Nouveau thème
+            }
+          </h3>
+          <button class="modal-close" (click)="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          @if (pendingTheme) {
+            <p class="modal-question">Ce thème utilise la même structure. Voulez-vous changer uniquement la couleur ?</p>
+            <div class="modal-checkboxes">
+              <label class="modal-checkbox">
+                <input type="checkbox" [(ngModel)]="applyColorsOnly" />
+                <span class="modal-checkmark"></span>
+                <span class="modal-check-label">Changer uniquement les couleurs</span>
+              </label>
+              <label class="modal-checkbox">
+                <input type="checkbox" [(ngModel)]="applyStructure" disabled />
+                <span class="modal-checkmark"></span>
+                <span class="modal-check-label">Changer la structure (même thème)</span>
+              </label>
+              <div class="modal-colors-preview">
+                <span class="modal-swatch" [style.background]="selectedTheme.accent"></span>
+                <span class="modal-swatch" [style.background]="selectedTheme.buttonBg"></span>
+                <span class="modal-swatch" [style.background]="selectedTheme.light"></span>
+                <span class="modal-swatch" [style.background]="selectedTheme.text"></span>
+              </div>
+            </div>
+          } @else {
+            <div class="modal-form">
+              <div class="form-group">
+                <label>Nom du thème</label>
+                <input type="text" [(ngModel)]="newTheme.name" placeholder="Ex: Mon Thème" />
+              </div>
+              <div class="form-group">
+                <label>Slug</label>
+                <input type="text" [(ngModel)]="newTheme.slug" placeholder="Ex: mon-theme" />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="newTheme.description" placeholder="Description du thème"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Image de prévisualisation (URL)</label>
+                <input type="text" [(ngModel)]="newTheme.previewImage" placeholder="https://..." />
+              </div>
+              <div class="form-group">
+                <label>Prix (€, laisser vide si gratuit)</label>
+                <input type="text" [(ngModel)]="newTheme.price" placeholder="Ex: 29.99" />
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-cancel" (click)="closeModal()">Annuler</button>
+          @if (pendingTheme) {
+            <button class="modal-btn modal-btn-validate" (click)="confirmThemeChange()">Valider</button>
+          } @else {
+            <button class="modal-btn modal-btn-validate" (click)="saveTheme()">Enregistrer</button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Floating Action Button -->
+  @if (!pendingTheme && !isEditing) {
+    <div class="studio-fab">
+      <button class="studio-fab-btn" (click)="openCreateModal()">
+        <app-icon name="add" collection="ic" size="28"></app-icon>
+      </button>
+    </div>
+  }
+
+  <div class="tab-panel" [class.hidden]="managePagesTabActive">
+    <div class="manage-pages-container">
+      <div class="manage-page-section">
+        <div class="page-header">
+          <app-icon name="home" size="24" class="page-icon"></app-icon>
+          <h2>Page Home</h2>
+        </div>
+        <div class="page-sections">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Hero Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Bannière principale avec titre, sous-titre et bouton d'appel à action.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>About Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Section présentation avec photo et texte de bio.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Portfolio Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Grille des réalisations et projets.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Contact Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Formulaire de contact et informations.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="manage-page-section">
+        <div class="page-header">
+          <app-icon name="photo_library" size="24" class="page-icon"></app-icon>
+          <h2>Page Gallery</h2>
+        </div>
+        <div class="page-sections">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Gallery Section</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Grille masonry avec filtres par catégorie et lightbox.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Categories Filter</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Filtres dynamiques par catégorie.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Lightbox</h3>
+              <span class="section-status active">Active</span>
+            </div>
+            <p class="section-desc">Prévisualisation plein écran avec navigation.</p>
+            <div class="section-actions">
+              <button class="section-btn">Modifier</button>
+              <button class="section-btn section-btn-secondary">Aperçu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

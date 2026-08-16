@@ -1,0 +1,38 @@
+<section class="logo-scroller">
+  <div class="logo-scroller-header">
+    <h2 class="logo-scroller-title">Nos Partenaires</h2>
+    <p class="logo-scroller-description">Ils nous font confiance pour sublimer leurs moments les plus importants.</p>
+  </div>
+  <div class="logo-scroller-content">
+    <div class="logo-scroller-items" role="marquee">
+      <div class="logo-scroller-row">
+        @for (partner of partners; track partner.id) {
+          <div class="logo-scroller-item">
+            <span>
+              @if (partner.linkUrl) {
+                <a href="{{ partner.linkUrl }}" target="_blank" rel="noopener noreferrer">
+                  <img src="{{ partner.logoUrl }}" alt="{{ partner.name }}">
+                </a>
+              } @else {
+                <img src="{{ partner.logoUrl }}" alt="{{ partner.name }}">
+              }
+            </span>
+          </div>
+        }
+        @for (partner of partners; track partner.id) {
+          <div class="logo-scroller-item" aria-hidden="true">
+            <span>
+              @if (partner.linkUrl) {
+                <a href="{{ partner.linkUrl }}" target="_blank" rel="noopener noreferrer">
+                  <img src="{{ partner.logoUrl }}" alt="{{ partner.name }}">
+                </a>
+              } @else {
+                <img src="{{ partner.logoUrl }}" alt="{{ partner.name }}">
+              }
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

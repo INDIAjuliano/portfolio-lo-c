@@ -1,0 +1,350 @@
+/* You can add global styles to this file, and also import other style files */
+/* ============================================================ */
+/* VARIABLES GLOBALES */
+/* ============================================================ */
+:root {
+  --bg-primary: #fafaf9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f2ed;
+  --bg-dark: #0a0a0a;
+  --bg-dark2: #141414;
+  --text-primary: #1a1c1c;
+  --text-secondary: #4c4546;
+  --text-inverse: #ffffff;
+  --text-muted: #9ca3af;
+  --border-color: #cfc4c5;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --overlay-light: rgba(0, 0, 0, 0.05);
+  --card-bg: #ffffff;
+  --btn-primary-bg: #000000;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #1a1c1c;
+  --loader-bg: #0a0a0a;
+  --curtain-color1: #000000;
+  --curtain-color2: #1a1a1a;
+  --logo-color: #1a1c1c;
+  --nav-link-color: #4c4546;
+  --nav-link-hover: #000000;
+  --footer-bg: #f9f9f9;
+  --accent: #b8965a;
+  --accent-light: #e2c98a;
+  --accent-dark: #7a5c2e;
+  --accent-hover: #a07d4a;
+  transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1a1a1a;
+  --bg-dark: #0a0a0a;
+  --bg-dark2: #141414;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-inverse: #0a0a0a;
+  --text-muted: #6b7280;
+  --border-color: #2a2a2a;
+  --shadow-color: rgba(255, 255, 255, 0.05);
+  --overlay-light: rgba(255, 255, 255, 0.05);
+  --card-bg: #1a1a1a;
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #000000;
+  --btn-primary-hover: #e0e0e0;
+  --loader-bg: #0a0a0a;
+  --curtain-color1: #000000;
+  --curtain-color2: #1a1a1a;
+  --logo-color: #f0f0f0;
+  --nav-link-color: #a0a0a0;
+  --nav-link-hover: #ffffff;
+  --footer-bg: #141414;
+  --accent: #b8965a;
+  --accent-light: #e2c98a;
+  --accent-dark: #7a5c2e;
+  --accent-hover: #a07d4a;
+}
+
+/* ============================================================ */
+/* RESET & BASE */
+/* ============================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* ============================================================ */
+/* TYPOGRAPHIE */
+/* ============================================================ */
+.font-headline-xl {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 48px;
+  line-height: 56px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.font-headline-lg {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+.font-headline-md {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+.font-body-lg {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+
+.font-body-md {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.font-label-md {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.font-label-sm {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================ */
+/* LAYOUT */
+/* ============================================================ */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ============================================================ */
+/* BOUTONS UNIFORMISÉS */
+/* ============================================================ */
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  padding: 12px 32px;
+  border: none;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 0;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--shadow-color);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  padding: 12px 32px;
+  border: 1px solid var(--border-color);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 0;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--shadow-color);
+}
+
+.btn-ghost {
+  display: inline-block;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  padding-bottom: 3px;
+  transition: color 0.3s, border-color 0.3s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.btn-fill {
+  display: inline-block;
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 16px 40px;
+  text-decoration: none;
+  transition: background 0.3s, transform 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-fill:hover {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+/* ============================================================ */
+/* SCROLL REVEAL */
+/* ============================================================ */
+.rv {
+  opacity: 0;
+  transform: translateY(44px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.rv.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rv.d1 {
+  transition-delay: 0.12s;
+}
+
+.rv.d2 {
+  transition-delay: 0.24s;
+}
+
+.rv.d3 {
+  transition-delay: 0.36s;
+}
+
+/* ============================================================ */
+/* SECTION */
+/* ============================================================ */
+.section {
+  padding: 96px 48px;
+  background: var(--bg-primary);
+  transition: background 0.4s ease;
+}
+
+.section-alt {
+  background: var(--bg-secondary);
+}
+
+.section-tertiary {
+  background: var(--bg-tertiary);
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.section-title h2 {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.section-title .line {
+  width: 96px;
+  height: 1px;
+  background: var(--text-primary);
+  margin: 0 auto;
+  transition: background 0.4s ease;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 48px 16px;
+  }
+}
+
+/* ============================================================ */
+/* ICONS */
+/* ============================================================ */
+.app-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* ============================================================ */
+/* HERO VARIANT SWITCHING */
+/* ============================================================ */
+app-hero {
+  display: block;
+}
+app-hero2 {
+  display: block;
+}

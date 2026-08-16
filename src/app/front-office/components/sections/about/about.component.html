@@ -1,0 +1,22 @@
+<section class="section section-tertiary" id="about">
+  <div class="about-grid container">
+    <div class="about-images">
+      @for (img of aboutImages; track $index) {
+        <div class="img" [style.backgroundImage]="'url(' + img + ')'"></div>
+      }
+    </div>
+    <div class="about-content">
+      <h2 class="rv">{{ sectionPage?.title || 'About the Photographer' }}</h2>
+      <p class="rv">
+        {{ sectionPage?.description || 'I am a professional photographer specializing in capturing authentic moments that tell compelling stories. With over 10 years of experience, I bring a refined artistic vision to every shoot—whether it is a wedding, a corporate event, or a personal portrait session. My approach combines technical precision with creative intuition to deliver images that feel both timeless and emotionally resonant.' }}
+      </p>
+      @if (sectionPage?.content; as content) {
+        <p class="rv" [innerHTML]="content"></p>
+      }
+      <button class="btn-primary rv">
+        View More
+        <app-icon name="arrow_right_alt" size="20"></app-icon>
+      </button>
+    </div>
+  </div>
+</section>
