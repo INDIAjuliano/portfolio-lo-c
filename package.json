@@ -1,11 +1,13 @@
 {
   "name": "app",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:server": "ng run app:server --configuration production",
+    "build:server": "ng run app:server:production",
+    "build:express": "tsc -p tsconfig.express.json",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:app": "node dist/app/server/server.mjs",
