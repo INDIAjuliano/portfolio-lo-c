@@ -2,7 +2,7 @@
 
 ## Aperçu du projet
 
-Site portfolio pour photographes professionnels (LOÏC Photography / Mampii Photography). Design minimaliste et éditorial avec typographie forte, animations GSAP, loader animé en rideau à lamelles, navigation fixe avec effet de scroll, grille de portfolio en 12 colonnes, et support du mode sombre/clair.
+Site portfolio pour photographes professionnels (LOÏC Razafison / Mampii Photography). Design minimaliste et éditorial avec typographie forte, animations GSAP, loader animé en rideau à lamelles, navigation fixe avec effet de scroll, grille de portfolio en 12 colonnes, et support du mode sombre/clair.
 
 ## Thème & style
 
