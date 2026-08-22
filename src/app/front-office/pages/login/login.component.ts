@@ -13,8 +13,8 @@ import { AuthService } from '../../../core/services/auth.service';
   encapsulation: ViewEncapsulation.None
 })
 export class LoginComponent implements OnInit {
-  email = 'admin@example.com';
-  password = 'admin123';
+  email = '';
+  password = '';
   passwordVisible = false;
   isSubmitting = false;
   errorMessage: string | null = null;

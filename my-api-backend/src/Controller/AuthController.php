@@ -91,6 +91,8 @@ class AuthController
         return new JsonResponse([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
             'roles' => $user->getRoles(),
             'subscriptionType' => $user->getSubscriptionType(),
             'isPremium' => $user->isPremiumUser(),
